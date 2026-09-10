@@ -1,7 +1,6 @@
 import React from 'react'
 import arrowUp   from '../assets/arrow-up.svg'
 import arrowDown from '../assets/arrow-down.svg'
-import star      from '../assets/yellowStar.svg'
 
 export const BRAND      = '#5F6FFF'
 export const BRAND_DARK = '#1A1F5E'
@@ -38,8 +37,8 @@ export const Avatar = ({ image, name, idx }) => {
     const av       = AVATAR_BG[idx % AVATAR_BG.length]
     const initials = (name ?? 'P').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
     return image
-        ? <img src={image} className='w-8 h-8 rounded-full object-cover flex-shrink-0 ring-2 ring-white' alt='' />
-        : <div className='w-8 h-8 rounded-full flex items-center justify-center font-semibold text-xs flex-shrink-0'
+        ? <img src={image} className='w-8 h-8 rounded-full object-cover shrink-0 ring-2 ring-white' alt='' />
+        : <div className='w-8 h-8 rounded-full flex items-center justify-center font-semibold text-xs shrink-0'
             style={{ background: av.bg, color: av.color }}>{initials}</div>
 }
 
@@ -50,27 +49,26 @@ export const StatusBadge = ({ item }) => {
 }
 
 export const SectionDot = ({ color }) => (
-    <span className='w-2 h-2 rounded-full flex-shrink-0 inline-block' style={{ background: color }} />
+    <span className='w-2 h-2 rounded-full shrink-0 inline-block' style={{ background: color }} />
 )
 
 export const CardHeader = ({ dot, title, right }) => (
-    <div className='flex items-center justify-between px-4 py-3 border-b border-gray-100'>
+    <div className='flex items-center justify-between border-b border-slate-100 px-4 py-3'>
         <div className='flex items-center gap-2'>
             <SectionDot color={dot} />
-            <span className='text-sm font-semibold text-gray-800'>{title}</span>
+            <span className='text-sm font-semibold text-slate-800'>{title}</span>
         </div>
         {right && <div>{right}</div>}
     </div>
 )
 
 export const PeriodTabs = ({ options, value, onChange }) => (
-    <div className='flex gap-1'>
+    <div className='flex gap-1 rounded-full bg-slate-100 p-1'>
         {options.map(p => (
             <button key={p} onClick={() => onChange(p)}
-                className={`text-[10px] font-semibold px-2.5 py-1 rounded-full border transition-all capitalize
-                    ${value === p
-                        ? 'bg-gray-100 border-gray-300 text-gray-800'
-                        : 'border-transparent text-gray-400 hover:text-gray-600'}`}>
+                className={`rounded-full px-2.5 py-1 text-[10px] font-semibold capitalize transition-all ${value === p
+                        ? 'bg-white text-slate-800 shadow-sm ring-1 ring-slate-200'
+                        : 'text-slate-500 hover:text-slate-700'}`}>
                 {p}
             </button>
         ))}
@@ -80,8 +78,8 @@ export const PeriodTabs = ({ options, value, onChange }) => (
 export const CustomTooltip = ({ active, payload, label, currency = '' }) => {
     if (!active || !payload?.length) return null
     return (
-        <div className='bg-white border border-gray-100 rounded-xl shadow-lg px-3 py-2 text-xs'>
-            <p className='font-semibold text-gray-700 mb-1'>{label}</p>
+        <div className='rounded-xl border border-slate-200 bg-white/95 px-3 py-2 text-xs shadow-[0_12px_30px_rgba(15,23,42,0.12)] backdrop-blur-sm'>
+            <p className='mb-1 font-semibold text-slate-700'>{label}</p>
             {payload.map((p, i) => (
                 <p key={i} style={{ color: p.color }}>{p.name}: {currency}{p.value?.toLocaleString()}</p>
             ))}
@@ -90,28 +88,28 @@ export const CustomTooltip = ({ active, payload, label, currency = '' }) => {
 }
 
 export const MetricCard = ({ label, value, upText, sub, accentColor, icon }) => (
-    <div className='bg-white rounded-2xl border border-gray-100 p-5 relative overflow-hidden cursor-pointer hover:shadow-md transition-all group'>
-        <div className='absolute top-0 left-0 right-0 h-[3px] rounded-t-2xl' style={{ background: accentColor }} />
-        <div className='flex items-center justify-between mb-3'>
-            <span className='text-[10px] font-bold uppercase tracking-widest' style={{ color: accentColor }}>{label}</span>
+    <div className='group relative cursor-pointer overflow-hidden rounded-2xl border border-slate-200/80 bg-white/90 p-5 shadow-[0_12px_24px_rgba(15,23,42,0.04)] transition-all duration-200 hover:-translate-y-1 hover:shadow-[0_18px_30px_rgba(79,70,229,0.10)]'>
+        <div className='absolute inset-x-0 top-0 h-1' style={{ background: accentColor }} />
+        <div className='mb-3 flex items-center justify-between'>
+            <span className='text-[10px] font-bold uppercase tracking-[0.18em]' style={{ color: accentColor }}>{label}</span>
             {icon && (
-                <div className='w-9 h-9 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform'
+                <div className='flex h-9 w-9 items-center justify-center rounded-xl transition-transform group-hover:scale-110'
                     style={{ background: `${accentColor}18` }}>
-                    <img src={icon} className='w-5 h-5 object-contain' alt='' />
+                    <img src={icon} className='h-5 w-5 object-contain' alt='' />
                 </div>
             )}
         </div>
-        <div className='text-3xl font-bold mb-1' style={{ color: BRAND_DARK }}>{value}</div>
-        <div className='text-[11px] text-gray-400 flex items-center gap-1 flex-wrap'>
+        <div className='mb-1 text-3xl font-bold tracking-tight' style={{ color: BRAND_DARK }}>{value}</div>
+        <div className='flex flex-wrap items-center gap-1 text-[11px] text-slate-500'>
             {upText && <span className='flex items-center gap-1'>{upText}</span>}
-            {sub   && <span className='text-gray-400'>{sub}</span>}
+            {sub && <span className='text-slate-500'>{sub}</span>}
         </div>
     </div>
 )
 
 export const HealthBar = ({ label, value, color }) => (
     <div className='flex items-center gap-3 py-2 border-b border-gray-50 last:border-0'>
-        <span className='text-xs text-gray-500 w-28 flex-shrink-0'>{label}</span>
+        <span className='text-xs text-gray-500 w-28 shrink-0'>{label}</span>
         <div className='flex-1 h-1.5 rounded-full bg-gray-100 overflow-hidden'>
             <div className='h-full rounded-full transition-all duration-700' style={{ width: `${value}%`, background: color }} />
         </div>

@@ -81,9 +81,9 @@ const DoctorDashboard = () => {
 
     const latestAppts = dashData?.latestAppointments ?? []
     const total       = Math.max(dashData.appointments ?? 1, 1)
-    const compCount   = latestAppts.filter(a => a.isCompleted).length
+    const compCount   = latestAppts.filter(a => !a.cancelled && a.isCompleted).length
     const cancCount   = latestAppts.filter(a => a.cancelled).length
-    const pendCount   = latestAppts.filter(a => !a.isCompleted && !a.cancelled).length
+    const pendCount   = latestAppts.filter(a => !a.cancelled && !a.isCompleted).length
     const compPct     = Math.round((compCount / total) * 100)
     const cancPct     = Math.round((cancCount / total) * 100)
     const pendPct     = Math.round((pendCount / total) * 100)
@@ -91,19 +91,21 @@ const DoctorDashboard = () => {
     const avgRating   = ratingsData?.average ?? 0
 
     return (
-        <div className='m-3 sm:m-5 space-y-4 sm:space-y-5 max-w-[1200px]'>
+        <div className='mx-auto w-full max-w-[1400px] space-y-4 p-3 sm:space-y-5 sm:p-5'>
 
             {/* Top Bar */}
-            <div className='flex items-start sm:items-center justify-between gap-2'>
-                <div>
-                    <h1 className='text-xl font-bold' style={{ color: BRAND_DARK }}>Dashboard Overview</h1>
-                    <p className='text-lg sm:text-2xl text-gray-800 font-bold mt-0.5'>
-                        Welcome back, {profileData?.name || 'Doctor'}
-                    </p>
-                </div>
-                <div className='flex items-center gap-2'>
-                    <div className='w-2 h-2 rounded-full bg-green-400 animate-pulse' />
-                    <span className='text-xs text-gray-400 font-medium'>Live data</span>
+            <div className='rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-[0_12px_28px_rgba(15,23,42,0.04)] backdrop-blur-sm'>
+                <div className='flex items-start justify-between gap-2 sm:items-center'>
+                    <div>
+                        <h1 className='text-xl font-bold tracking-tight text-slate-800'>Dashboard Overview</h1>
+                        <p className='mt-1 text-lg font-bold text-slate-700 sm:text-2xl'>
+                            Welcome back, {profileData?.name || 'Doctor'}
+                        </p>
+                    </div>
+                    <div className='inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1.5'>
+                        <div className='h-2 w-2 animate-pulse rounded-full bg-emerald-500' />
+                        <span className='text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-600'>Live data</span>
+                    </div>
                 </div>
             </div>
 
@@ -131,7 +133,7 @@ const DoctorDashboard = () => {
             />
 
             {/* Appointments + Upcoming */}
-            <div className='grid grid-cols-1 lg:grid-cols-[1fr_320px] xl:grid-cols-[1fr_360px] gap-4'>
+            <div className='grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(260px,320px)] xl:grid-cols-[minmax(0,1fr)_360px]'>
                 <DoctorAppointments
                     latestAppts={latestAppts}
                     currency={currency}

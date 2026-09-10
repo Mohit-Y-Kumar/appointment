@@ -71,6 +71,7 @@ const VideoCall = ({
         // Fallback: own socket
         const socket = io(backendUrl, {
             transports: ['websocket', 'polling'],
+            withCredentials: true,
             extraHeaders: { 'ngrok-skip-browser-warning': 'true' }
         })
         internalSocketRef.current = socket
@@ -115,7 +116,7 @@ const VideoCall = ({
             peerRef.current = peer
 
             pendingSignalsRef.current.forEach(sig => {
-                try { peer.signal(sig) } catch { }
+                try { peer.signal(sig) } catch (error) { console.warn('[VideoCall] Invalid pending signal', error) }
             })
             pendingSignalsRef.current = []
         }
@@ -137,7 +138,7 @@ const VideoCall = ({
 
         const onSignal = ({ signalData }) => {
             if (peerRef.current && !peerRef.current.destroyed) {
-                try { peerRef.current.signal(signalData) } catch { }
+                try { peerRef.current.signal(signalData) } catch (error) { console.warn('[VideoCall] Invalid signal', error) }
             } else {
                 pendingSignalsRef.current.push(signalData)
             }
@@ -287,7 +288,7 @@ const VideoCall = ({
 
         peerRef.current = peer
         pendingSignalsRef.current.forEach(sig => {
-            try { if (!peer.destroyed) peer.signal(sig) } catch (e) { }
+            try { if (!peer.destroyed) peer.signal(sig) } catch (error) { console.warn('[VideoCall] Invalid pending signal', error) }
         })
         pendingSignalsRef.current = []
     }

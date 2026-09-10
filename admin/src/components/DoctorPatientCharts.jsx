@@ -3,7 +3,6 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, PieChart, Pie, Cell, Legend
 } from 'recharts'
-import { assets } from '../assets/assets'
 import { PIE_COLORS, TS, card, fmtR } from '../utils/DashboardUtils'
 import { SectionLabel, renderPieLabel } from './DashboardWidgets'
 
@@ -76,7 +75,7 @@ const DoctorPatientCharts = ({ stats, dashData, doctors }) => {
             {[
               { label: 'Cancellation Rate',  value: stats.total ? ((stats.cancelled / stats.total) * 100).toFixed(1) + '%' : '0%', color: 'text-red-500',     bg: 'bg-red-50'     },
               { label: 'Completion Rate',    value: stats.total ? ((stats.completed / stats.total) * 100).toFixed(1) + '%' : '0%', color: 'text-teal-600',    bg: 'bg-teal-50'    },
-              { label: 'Paid Revenue Collected',  value: fmtR(stats.revenue || 0),                                                       color: 'text-indigo-600',  bg: 'bg-indigo-50'  },
+              { label: 'Paid Revenue Collected',  value: fmtR(stats.revenue || 0),                                                       color: 'text-primary',     bg: 'bg-blue-50'     },
               { label: 'Available Doctors',  value: (doctors || []).filter(d => d.available).length,                                color: 'text-emerald-600', bg: 'bg-emerald-50' },
               { label: 'Paid Appointments',  value: stats.paid || 0,                                                                color: 'text-sky-600',     bg: 'bg-sky-50'     },
               { label: 'Total Doctors',      value: dashData.doctors,                                                               color: 'text-violet-600',  bg: 'bg-violet-50'  },

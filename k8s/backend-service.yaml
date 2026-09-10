@@ -6,7 +6,7 @@ spec:
   selector:
     app: backend
   ports:
-  - port: 4000
+  - name: http
+    port: 4000
     targetPort: 4000
-    nodePort: 30400
-  type: NodePort
+  type: ClusterIP

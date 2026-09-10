@@ -8,17 +8,17 @@ const DoctorAppointments = ({ latestAppts, currency, slotDateFormat, cancelAppoi
     const filterMap = {
         all:       latestAppts,
         pending:   latestAppts.filter(a => !a.cancelled && !a.isCompleted),
-        completed: latestAppts.filter(a => a.isCompleted),
+        completed: latestAppts.filter(a => !a.cancelled && a.isCompleted),
         cancelled: latestAppts.filter(a => a.cancelled),
     }
 
     const filteredAppts = filterMap[activeTab] ?? latestAppts
 
     return (
-        <div className='bg-white rounded-2xl border border-gray-100 overflow-hidden'>
+        <div className='overflow-hidden rounded-2xl border border-slate-200/80 bg-white/90 shadow-[0_12px_24px_rgba(15,23,42,0.04)]'>
 
             {/* Header */}
-            <div className='flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3 px-3 sm:px-4 py-3 border-b border-gray-100'>
+            <div className='flex flex-col gap-2 border-b border-slate-100 px-3 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3 sm:px-4'>
                 <div className='flex items-center gap-2'>
                     <SectionDot color={BRAND} />
                     <span className='text-sm font-semibold text-gray-800'>Latest Appointments</span>
@@ -28,7 +28,7 @@ const DoctorAppointments = ({ latestAppts, currency, slotDateFormat, cancelAppoi
                         <button
                             key={tab.key}
                             onClick={() => setActiveTab(tab.key)}
-                            className='text-[10px] font-bold px-2.5 py-1 rounded-full transition-all whitespace-nowrap flex-shrink-0'
+                            className='text-[10px] font-bold px-2.5 py-1 rounded-full transition-all whitespace-nowrap shrink-0'
                             style={{
                                 background: activeTab === tab.key ? tab.color : tab.bg,
                                 color:      activeTab === tab.key ? 'white'   : tab.color
@@ -41,7 +41,7 @@ const DoctorAppointments = ({ latestAppts, currency, slotDateFormat, cancelAppoi
             </div>
 
             {/* Column Headers */}
-            <div className='hidden sm:grid grid-cols-[2fr_1.5fr_1fr_1fr_100px] px-4 sm:px-5 py-3 bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wide'>
+            <div className='hidden border-b border-slate-100 bg-slate-50 px-4 py-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500 sm:grid sm:grid-cols-[2fr_1.5fr_1fr_1fr_100px] sm:px-5'>
                 <span>Patient</span>
                 <span className='pl-2'>Date</span>
                 <span className='pl-2'>Fee</span>
@@ -50,11 +50,11 @@ const DoctorAppointments = ({ latestAppts, currency, slotDateFormat, cancelAppoi
             </div>
 
             {/* Rows */}
-            <div className='max-h-80 overflow-y-auto divide-y divide-gray-100'>
+            <div className='max-h-80 divide-y divide-slate-100 overflow-y-auto'>
                 {filteredAppts.length > 0
                     ? filteredAppts.map((item, i) => (
                         <div key={item._id ?? i}
-                            className='grid grid-cols-1 sm:grid-cols-[2fr_1.5fr_1fr_1fr_100px] items-center gap-2 sm:gap-3 px-3 sm:px-5 py-3 hover:bg-blue-50/40 transition text-sm'>
+                            className='grid grid-cols-1 items-center gap-2 px-3 py-3 text-sm transition hover:bg-indigo-50/30 sm:grid-cols-[2fr_1.5fr_1fr_1fr_100px] sm:gap-3 sm:px-5'>
 
                             {/* Patient */}
                             <div className='flex items-center gap-2 sm:gap-3 min-w-0'>
@@ -71,9 +71,9 @@ const DoctorAppointments = ({ latestAppts, currency, slotDateFormat, cancelAppoi
                             <span className='font-semibold text-sm text-gray-900 pl-0 sm:pl-3 hidden sm:block'>{currency}{item.amount}</span>
                             <div className='hidden sm:block'><StatusBadge item={item} /></div>
 
-                            <div className='flex justify-start sm:justify-end gap-2 min-w-[80px]'>
+                            <div className='flex min-w-20 justify-start gap-2 sm:justify-end'>
                                 <StatusBadge item={item} />
-                                {!item.cancelled && !item.isCompleted && (
+                                {!item.cancelled && !item.isCompleted && item.payment && (
                                     <>
                                         <button onClick={() => cancelAppointment(item._id)}
                                             className='w-7 h-7 sm:w-8 sm:h-8 rounded-full bg-red-100 hover:bg-red-200 flex items-center justify-center transition'>

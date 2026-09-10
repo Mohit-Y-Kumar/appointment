@@ -22,7 +22,7 @@ const RevenueCharts = ({ stats }) => {
             {new Date().toLocaleString('default', { month: 'long', year: 'numeric' })} — day‑by‑day earnings
           </p>
           {(stats.dailyRevenueData || []).every(d => d.revenue === 0) ? (
-            <div className='flex items-center justify-center h-[190px] text-slate-300 text-sm'>
+            <div className='flex items-center justify-center h-47.5 text-slate-300 text-sm'>
               No paid appointments this month yet
             </div>
           ) : (
@@ -54,7 +54,7 @@ const RevenueCharts = ({ stats }) => {
             </div>
             <div className='flex items-center gap-3 text-[10px] text-slate-500 mt-0.5'>
               <span className='flex items-center gap-1'>
-                <span className='w-5 h-0.5 bg-indigo-500 inline-block rounded' />Revenue
+                <span className='w-5 h-0.5 bg-primary inline-block rounded' />Revenue
               </span>
               <span className='flex items-center gap-1'>
                 <span className='w-5 h-px border-t-2 border-dashed border-teal-500 inline-block' />Target
@@ -62,7 +62,7 @@ const RevenueCharts = ({ stats }) => {
             </div>
           </div>
           {(stats.revTrendData || []).every(d => d.revenue === 0) ? (
-            <div className='flex items-center justify-center h-[190px] text-slate-300 text-sm'>
+            <div className='flex items-center justify-center h-47.5 text-slate-300 text-sm'>
               No revenue data available yet
             </div>
           ) : (
@@ -98,15 +98,15 @@ const RevenueCharts = ({ stats }) => {
                 <button key={key} onClick={() => setRevPeriod(key)}
                   className={`text-[11px] px-3 py-1 rounded-full border transition-all font-medium
                     ${revPeriod === key
-                      ? 'bg-indigo-600 text-white border-indigo-600 shadow-sm'
-                      : 'bg-white text-slate-500 border-slate-200 hover:border-indigo-300 hover:text-indigo-600'}`}>
+                      ? 'bg-primary text-white border-primary shadow-sm'
+                      : 'bg-white text-slate-500 border-slate-200 hover:border-blue-300 hover:text-primary'}`}>
                   {label}
                 </button>
               ))}
           </div>
         </div>
         {revDocData.length === 0 ? (
-          <div className='flex items-center justify-center h-[200px] text-slate-300 text-sm'>
+          <div className='flex items-center justify-center h-50 text-slate-300 text-sm'>
             No paid appointments for this period
           </div>
         ) : (

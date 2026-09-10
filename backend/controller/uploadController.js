@@ -1,4 +1,5 @@
-import messageModel from '../models/messageModel.js'
+import appointmentModel from '../models/appointmentModel.js'
+import { unlink } from 'fs/promises'
 import { v2 as cloudinary } from 'cloudinary'
 
 const uploadChatImage = async (req, res) => {
@@ -8,10 +9,17 @@ const uploadChatImage = async (req, res) => {
             return res.status(400).json({ success: false, message: 'Image file is required.' })
         }
 
-        const { roomId, sender, senderType, name } = req.body
+        const { roomId } = req.body
 
-        if (!roomId || !sender || !senderType || !name) {
-            return res.status(400).json({ success: false, message: 'roomId, sender, senderType and name are required.' })
+        const match = /^(?:chat|call)_([a-f\d]{24})_([a-f\d]{24})$/i.exec(roomId || '')
+        if (!match) {
+            return res.status(400).json({ success: false, message: 'Valid roomId is required.' })
+        }
+
+        const [, doctorId, userId] = match
+        const expectedId = req.participantRole === 'doctor' ? doctorId : userId
+        if (req.participantId !== expectedId || !await appointmentModel.exists({ userId, docId: doctorId, cancelled: false })) {
+            return res.status(403).json({ success: false, message: 'Room access denied.' })
         }
 
         const imageUpload = await cloudinary.uploader.upload(imageFile.path, {
@@ -19,23 +27,13 @@ const uploadChatImage = async (req, res) => {
             folder:        'chat_images'
         })
 
-        const saved = await messageModel.create({
-            roomId,
-            sender,
-            senderType,
-            name,
-            message:  '',
-            imageUrl: imageUpload.secure_url,
-            isRead:   false,
-            readAt:   null,
-            time:     new Date()
-        })
-
-        return res.status(201).json({ success: true, message: saved })
+        return res.status(201).json({ success: true, imageUrl: imageUpload.secure_url })
 
     } catch (error) {
         console.error('[uploadChatImage]', error.message)
         return res.status(500).json({ success: false, message: 'Internal server error.' })
+    } finally {
+        if (req.file?.path) await unlink(req.file.path).catch(() => {})
     }
 }
 

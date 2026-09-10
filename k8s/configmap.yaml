@@ -3,12 +3,16 @@ kind: ConfigMap
 metadata:
   name: docnest-config
 data:
+  NODE_ENV: "production"
   PORT: "4000"
+  APP_URL: "https://docnest.example.com"
+  FRONTEND_URL: "https://docnest.example.com"
+  ALLOWED_ORIGINS: "https://docnest.example.com,https://www.docnest.example.com"
   CURRENCY: "INR"
   JWT_EXPIRES_IN: "7d"
-  ALLOWED_ORIGINS: "http://192.168.56.10:3000,http://192.168.56.10:3001"
+  LOG_LEVEL: "info"
   CAL_ICON: "https://res.cloudinary.com/dmwrqi9eg/image/upload/v1776749230/calendar_qsuias.png"
-  CLOC_ICON: "https://res.cloudinary.com/dmwrqi9eg/image/upload/v1776748982/clock_gtajrf.svg"
+  CLOCK_ICON: "https://res.cloudinary.com/dmwrqi9eg/image/upload/v1776748982/clock_gtajrf.png"
   DOC_ICON: "https://res.cloudinary.com/dmwrqi9eg/image/upload/v1776749330/stethoscope_lyqcei.png"
-  LOGO_URL: "https://res.cloudinary.com/dmwrqi9eg/image/upload/v1776748903/docnest_logo_fa8sqo.svg"
+  LOGO_URL: "https://res.cloudinary.com/dmwrqi9eg/image/upload/v1776748903/docnest_logo_fa8sqo.png"
   MONEY_ICON: "https://res.cloudinary.com/dmwrqi9eg/image/upload/v1776749401/wage_dree23.png"

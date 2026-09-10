@@ -12,10 +12,10 @@ const DoctorCharts = ({
     currency
 }) => {
     return (
-        <div className='grid grid-cols-1 lg:grid-cols-2 gap-4'>
+        <div className='grid grid-cols-1 gap-4 lg:grid-cols-2'>
 
             {/* Patient Visits */}
-            <div className='bg-white rounded-2xl border border-gray-100 overflow-hidden'>
+            <div className='overflow-hidden rounded-2xl border border-slate-200/80 bg-white/90 shadow-[0_12px_24px_rgba(15,23,42,0.04)]'>
                 <CardHeader
                     dot={BRAND}
                     title='Patient Visits'
@@ -25,7 +25,7 @@ const DoctorCharts = ({
                     {loadingVisit ? <Spinner color={BRAND} /> : visitData.length === 0 ? (
                         <div className='h-40 sm:h-48 flex items-center justify-center text-sm text-gray-400'>No visit data yet</div>
                     ) : (
-                        <ResponsiveContainer width='100%' height={160} className='sm:!h-[192px]'>
+                        <ResponsiveContainer width='100%' height={160} className='sm:h-48!'>
                             <BarChart data={visitData} barCategoryGap='30%'>
                                 <CartesianGrid strokeDasharray='3 3' stroke='rgba(0,0,0,0.05)' vertical={false} />
                                 <XAxis dataKey='name' tick={{ fontSize: 9, fill: '#9ca3af' }} axisLine={false} tickLine={false} />

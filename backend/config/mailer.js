@@ -17,8 +17,10 @@ export const sendMail = async ({ to, subject, html }) => {
             html
         })
         console.log(`[Mailer] Email sent to ${to}`)
+        return true
     } catch (error) {
         console.error('[Mailer] Error:', error.message)
+        return false
     }
 }
 

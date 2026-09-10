@@ -2,11 +2,12 @@ import React, { useState, useContext } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { AppContext } from '../context/AppContext'
 import axios from 'axios'
+import { toast } from 'react-toastify'
 
 import { assets } from '../assets/assets'
 
 const SymptomChecker = () => {
-    const { backendUrl, doctors } = useContext(AppContext)
+    const { backendUrl, doctors, token } = useContext(AppContext)
     const navigate = useNavigate()
 
     const [symptom, setSymptom] = useState('')
@@ -35,10 +36,18 @@ const SymptomChecker = () => {
         setSuggestedDoctors([])
         setAiReply('')
 
+        if (!token) {
+            setAiReply('Please log in to use the symptom checker.')
+            toast.warn('Please log in to use the symptom checker.')
+            setLoading(false)
+            return
+        }
+
         try {
             const { data } = await axios.post(
                 backendUrl + '/api/chat/message',
-                { message: query }
+                { message: query },
+                { withCredentials: true }
             )
 
             if (data.success) {
@@ -61,7 +70,9 @@ const SymptomChecker = () => {
                 setAiReply(reply)
             }
         } catch (error) {
-            setAiReply('Something went wrong. Please try again.')
+            const message = error?.response?.data?.message || 'Something went wrong. Please try again.'
+            setAiReply(message)
+            toast.error(message)
         } finally {
             setLoading(false)
         }
@@ -96,7 +107,7 @@ const SymptomChecker = () => {
                     <button
                         onClick={() => findDoctor()}
                         disabled={loading || !symptom.trim()}
-                        className='flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-full text-sm font-medium disabled:opacity-50 hover:scale-105 transition-all duration-300'
+                        className='flex items-center justify-center gap-2 bg-linear-to-r from-primary to-accent text-white px-6 py-3 rounded-full text-sm font-medium disabled:opacity-50 hover:scale-105 transition-all duration-300'
                     >
                         <img
                             src={loading ? assets.loadingIcon : assets.lenseIcon}
@@ -158,7 +169,7 @@ const SymptomChecker = () => {
                         <img src={assets.docIcon} alt="doctor" className="w-10 h-10" />
                         <span>AI Recommendation</span>
                     </h3>
-                    <div className='grid gap-4 [grid-template-columns:repeat(auto-fit,minmax(200px,1fr))] px-4 md:px-10'>
+                    <div className='grid gap-4 grid-cols-[repeat(auto-fit,minmax(200px,1fr))] px-4 md:px-10'>
                         {suggestedDoctors.map((doc, index) => (
                             <div
                                 key={index}
@@ -168,7 +179,7 @@ const SymptomChecker = () => {
                                 <img
                                     src={doc.image}
                                     alt={doc.name}
-                                    className='w-full h-40 object-cover bg-gradient-to-r from-blue-600 to-purple-600'
+                                    className='w-full h-40 object-cover bg-linear-to-r from-primary to-accent'
                                 />
                                 <div className='p-3'>
                                     <div className={`flex items-center gap-1 text-xs ${doc.available ? 'text-green-500' : 'text-gray-400'}`}>

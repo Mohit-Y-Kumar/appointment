@@ -1,5 +1,5 @@
 export const C = {
-  primary: '#4F46E5', violet: '#7C3AED', teal: '#0D9488',
+  primary: '#1D4ED8', violet: '#0EA5E9', teal: '#14B8A6',
   rose: '#E11D48', amber: '#D97706', sky: '#0284C7',
   green: '#16A34A', slate: '#475569', pink: '#db2777',
 }
@@ -21,7 +21,7 @@ export const fmtR = (v = 0) => {
   return '₹' + v
 }
 
-export const card = 'bg-white rounded-2xl border border-slate-100 shadow-sm p-5'
+export const card = 'bg-white/95 rounded-2xl border border-slate-200/80 shadow-[0_14px_35px_rgba(15,23,42,0.06)] p-4 sm:p-5 backdrop-blur-sm'
 
 export const parseSlot = (slotDate) => {
   if (!slotDate) return null

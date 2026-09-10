@@ -1,11 +1,10 @@
 import mongoose from 'mongoose'
 
 const connectDB = async () => {
-    const uri = process.env.MONGO_URI
+    const uri = process.env.MONGO_URI || process.env.MONGODB_URI
 
     if (!uri) {
-        console.error('[MongoDB] MONGO_URI is not defined in environment variables')
-        process.exit(1)
+        throw new Error('MONGO_URI or MONGODB_URI is not defined in environment variables')
     }
 
     try {
@@ -17,9 +16,16 @@ const connectDB = async () => {
             serverSelectionTimeoutMS: 5000,
             socketTimeoutMS: 45000
         })
+
+        if (process.env.MONGO_TRANSACTIONS_REQUIRED !== 'false') {
+            const hello = await mongoose.connection.db.admin().command({ hello: 1 })
+            if (!hello.setName && hello.msg !== 'isdbgrid') {
+                throw new Error('MongoDB replica set or sharded deployment is required for booking transactions')
+            }
+        }
     } catch (error) {
         console.error('[MongoDB] Connection failed:', error.message)
-        process.exit(1)
+        throw error
     }
 }
 

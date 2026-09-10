@@ -59,7 +59,7 @@ const Doctors = () => {
       const { data } = await axios.post(
         `${backendUrl}/api/doctor/like/${docId}`,
         {},
-        { headers: { Authorization: `Bearer ${token}` } }
+        { withCredentials: true }
       )
       if (data.success) {
         setLikedDoctors(prev => ({ ...prev, [docId]: data.liked }))
@@ -83,7 +83,7 @@ const Doctors = () => {
   const clearSearch = () => setSearch('')
 
   return (
-    <div className='px-4 sm:px-8 md:px-16 max-w-6xl mx-auto'>
+    <div className='mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8'>
       <p className='text-gray-500 text-sm mb-4'>Browse through the doctors specialists.</p>
 
       {/* ── Search bar ── */}
@@ -160,7 +160,7 @@ const Doctors = () => {
                   : 'No doctors available.'}
             </p>
           ) : (
-            <div className='grid gap-4 grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3'>
+            <div className='grid grid-cols-1 gap-4 min-[480px]:grid-cols-2 lg:grid-cols-3'>
               {displayDocs.map((item) => (
                 <DoctorCard
                   key={item._id}

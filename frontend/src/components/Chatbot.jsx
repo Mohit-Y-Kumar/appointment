@@ -100,7 +100,7 @@ const Chatbot = () => {
             const { data } = await axios.post(
                 `${backendUrl}/api/user/book-appointment`,
                 { docId: doctorSnap._id, slotDate, slotTime: slotSnap },
-                { headers: { Authorization: `Bearer ${token}` } }
+                { withCredentials: true }
             )
 
             if (data.success && data.appointmentId) {
@@ -137,7 +137,7 @@ const Chatbot = () => {
             const { data } = await axios.post(
                 `${backendUrl}/api/user/payment-razorpay`,
                 { appointmentId },
-                { headers: { Authorization: `Bearer ${token}` } }
+                { withCredentials: true }
             )
 
             if (!data.success || !data.order) {
@@ -158,7 +158,7 @@ const Chatbot = () => {
                         const verify = await axios.post(
                             `${backendUrl}/api/user/verifyRazorpay`,
                             { response },
-                            { headers: { Authorization: `Bearer ${token}` } }
+                            { withCredentials: true }
                         )
                         if (verify.data.success) {
                             setMessages(prev => [...prev, {
@@ -201,7 +201,7 @@ const Chatbot = () => {
     }
 
     // Send message to AI backend
-    const sendMessage = useCallback(async (directMessage = null, lang = 'en') => {
+    const sendMessage = useCallback(async (directMessage = null) => {
         const userMessage = (directMessage || input).trim()
         if (!userMessage || loading) return
 
@@ -224,6 +224,11 @@ const Chatbot = () => {
         }
 
         // AI chat
+        if (!token) {
+            setMessages(prev => [...prev, { role: 'bot', type: 'login_required' }])
+            setLoading(false)
+            return
+        }
         const newHistory = [...convHistory, { role: 'user', content: userMessage }]
 
         try {
@@ -231,7 +236,7 @@ const Chatbot = () => {
                 message: userMessage,
                 conversationHistory: convHistory,
                 doctors: doctors?.slice(0, 10),
-            })
+            }, { withCredentials: true })
 
             if (data.success) {
                 let reply = data.reply || ''
@@ -299,7 +304,7 @@ const Chatbot = () => {
             <button
                 onClick={() => setIsOpen(p => !p)}
                 aria-label={isOpen ? 'Close chat' : 'Open chat'}
-                className='fixed bottom-6 right-6 z-50 bg-gradient-to-r from-blue-600 to-purple-600 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-all duration-300'
+                className='fixed bottom-6 right-6 z-50 bg-linear-to-r from-primary to-accent text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center hover:scale-110 transition-all duration-300'
             >
                 <img
                     src={isOpen ? assets.crossIcon : assets.chatIcon}
@@ -309,10 +314,10 @@ const Chatbot = () => {
             </button>
 
             {isOpen && (
-                <div className='fixed bottom-24 right-6 z-50 w-80 sm:w-96 bg-white rounded-2xl shadow-2xl border border-gray-200 flex flex-col overflow-hidden max-h-[85vh]'>
+                <div className='fixed bottom-20 left-3 right-3 z-50 flex max-h-[calc(100dvh-6rem)] flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-2xl sm:left-auto sm:right-6 sm:w-96'>
 
                     {/* Header */}
-                    <div className='bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-3 flex items-center gap-3 shrink-0'>
+                    <div className='bg-linear-to-r from-primary to-accent px-4 py-3 flex items-center gap-3 shrink-0'>
                         <div className='w-8 h-8 bg-white rounded-full flex items-center justify-center overflow-hidden shrink-0'>
                             <img src={assets.robotIcon} alt='bot' className='w-5 h-5 object-contain' />
                         </div>
@@ -519,7 +524,7 @@ const Chatbot = () => {
                                 <button
                                     onClick={bookAppointment}
                                     disabled={loading}
-                                    className='w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-2 rounded-lg text-sm font-medium mb-2 disabled:opacity-50 flex items-center justify-center gap-2 hover:opacity-90 transition'
+                                    className='w-full bg-linear-to-r from-primary to-accent text-white py-2 rounded-lg text-sm font-medium mb-2 disabled:opacity-50 flex items-center justify-center gap-2 hover:opacity-90 transition'
                                 >
                                     {loading
                                         ? <><img src={assets.loadingIcon} className='w-4 h-4 animate-spin' alt='' /> Processing...</>

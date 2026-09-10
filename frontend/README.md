@@ -1,16 +1,72 @@
-# React + Vite
+# DocNest Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This app is the patient-facing interface for DocNest. It allows users to browse doctors, book appointments, pay for services, chat with doctors, and view their profile history.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- doctor search and filtering
+- doctor profile pages
+- appointment booking and tracking
+- payment flow using Razorpay
+- live chat UI and message history
+- profile update and photo upload
+- AI symptom checker suggestions
+- responsive design for desktop and mobile
 
-## React Compiler
+## Local setup
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+1. Install dependencies
 
-## Expanding the ESLint configuration
+```bash
+cd frontend
+npm install
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+2. Create the environment file
+
+```bash
+cp .env.example .env
+```
+
+Example:
+
+```env
+VITE_BACKEND_URL=http://localhost:4000
+VITE_RAZORPAY_KEY_ID=your_public_razorpay_key
+```
+
+3. Start the app
+
+```bash
+npm run dev
+```
+
+The app runs at http://localhost:5173 by default.
+
+## Production build
+
+```bash
+npm run build
+```
+
+The build output is served by nginx in the Docker setup.
+
+## Important notes
+
+- The backend URL must match the backend service URL used in deployment.
+- Every frontend origin must be allowed in the backend ALLOWED_ORIGINS environment variable.
+- In production, do not hardcode secrets in the frontend. Only public keys such as Razorpay public keys should be exposed.
+
+## App structure
+
+```text
+frontend/
+├── src/
+├── public/
+├── index.html
+├── package.json
+├── vite.config.js
+├── Dockerfile
+└── README.md
+```
+

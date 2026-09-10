@@ -24,62 +24,69 @@ const Sidebar = () => {
   const links = aToken ? adminLinks : dToken ? doctorLinks : []
 
   return (
-    <div className='fixed top-[44px] left-0 h-[calc(100vh-44px)] mt-6 w-16 md:w-56 bg-brand-dark border-r border-white/10 flex flex-col z-40'>
+    <aside className='fixed left-0 top-14 z-40 flex h-[calc(100vh-3.5rem)] w-16 flex-col border-r border-slate-200/80 bg-slate-950/95 shadow-[8px_0_30px_rgba(15,23,42,0.18)] backdrop-blur-md md:w-60'>
 
       {/* Logo + Role zone */}
-      <div className='px-3 md:px-5 py-5 border-b border-white/10'>
-        <div className='flex items-center gap-2.5'>
-          <div className='relative w-8 h-8 bg-primary rounded-lg flex items-center justify-center flex-shrink-0'>
-            <div className='absolute w-[3px] h-3.5 bg-white rounded-full' />
-            <div className='absolute w-3.5 h-[3px] bg-white rounded-full' />
-            <span className='absolute -top-1 -right-1 w-2.5 h-2.5 bg-brand-pink rounded-full border-2 border-brand-dark' />
+      <div className='px-3 md:px-4 py-5 border-b border-white/10'>
+        <div className='flex items-center gap-3'>
+          <div className='relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 via-blue-600 to-cyan-500 shadow-[0_10px_18px_rgba(59,130,246,0.35)] ring-1 ring-white/20 shrink-0'>
+            <div className='absolute h-4 w-1 rounded-full bg-white' />
+            <div className='absolute h-1 w-4 rounded-full bg-white' />
+            <span className='absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full border-2 border-slate-950 bg-emerald-400' />
           </div>
-          <span className='hidden md:block text-white font-bold text-base tracking-tight'>
-            <span className='text-primary'>Doc</span>Nest
-          </span>
+          <div className='hidden md:block'>
+            <span className='block text-lg font-bold tracking-tight text-white'>
+              <span className='text-indigo-400'>Doc</span>Nest
+            </span>
+            <span className='block text-[9px] font-medium uppercase tracking-[0.28em] text-slate-400'>Healthcare</span>
+          </div>
         </div>
 
-        <div className='hidden md:inline-flex mt-3 items-center gap-1.5 bg-white/10 rounded-full px-3 py-1'>
-          <span className='w-1.5 h-1.5 rounded-full bg-brand-pink' />
-          <span className='text-[10px] font-semibold text-white/70 uppercase tracking-widest'>
+        <div className='hidden md:inline-flex mt-4 items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5'>
+          <span className='h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,0.9)]' />
+          <span className='text-[9px] font-semibold uppercase tracking-[0.24em] text-slate-300'>
             {aToken ? 'Admin Panel' : 'Doctor Panel'}
           </span>
         </div>
       </div>
 
       {/* Nav Links */}
-      <ul className='mt-4 flex flex-col gap-1 px-2 md:px-3 flex-1'>
+      <nav className='mt-4 flex flex-1 flex-col gap-1.5 px-2 md:px-3'>
         {links.map(({ to, icon, label }) => (
           <NavLink
             key={to}
             to={to}
             className={({ isActive }) =>
-              `flex items-center gap-3 py-2.5 px-2 md:px-4 rounded-xl cursor-pointer transition-all
+              `group relative flex items-center gap-3 rounded-2xl px-2.5 py-2.5 md:px-3.5 transition-all duration-200 ease-out
                justify-center md:justify-start
                ${isActive
-                 ? 'bg-primary text-white font-semibold shadow-sm'
-                 : 'text-white/50 hover:text-white hover:bg-white/10'
+                 ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-[0_12px_18px_rgba(79,70,229,0.35)]'
+                 : 'text-slate-300 hover:bg-white/6 hover:text-white'
                }`
             }
           >
             {({ isActive }) => (
               <>
+                <span className={`absolute left-0 top-2 h-6 w-1 rounded-full ${isActive ? 'bg-white/80' : 'bg-transparent group-hover:bg-white/25'}`} />
                 <img
                   src={icon}
                   alt=''
-                  className='w-4 h-4 flex-shrink-0'
-                  style={{ filter: isActive ? 'brightness(0) invert(1)' : 'brightness(0) invert(0.5)' }}
+                  className='h-4 w-4 shrink-0 transition-all'
+                  style={{ filter: isActive ? 'brightness(0) invert(1)' : 'brightness(0) invert(0.7)' }}
                 />
-                <p className='hidden md:block text-sm'>{label}</p>
+                <p className='hidden text-sm font-medium md:block'>{label}</p>
               </>
             )}
           </NavLink>
         ))}
-      </ul>
+      </nav>
 
-      
-
-    </div>
+      <div className='hidden border-t border-white/10 px-3 py-4 md:block'>
+        <div className='rounded-2xl border border-white/10 bg-white/5 px-3 py-2 text-[10px] uppercase tracking-[0.22em] text-slate-400'>
+          Secure access
+        </div>
+      </div>
+    </aside>
   )
 }
 

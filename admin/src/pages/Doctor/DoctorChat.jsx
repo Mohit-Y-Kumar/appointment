@@ -4,10 +4,11 @@ import { DoctorContext } from '../../context/DoctorContext'
 import axios from 'axios'
 import DoctorVideoCall from './DoctorVideoCall'
 import { assets } from '../../assets/assets'
+import { toast } from 'react-toastify'
 
 
 const DoctorChat = ({ docId, patientId, patientName, patientImage, onClose }) => {
-    const { backendUrl, profileData, dToken } = useContext(DoctorContext)
+    const { backendUrl, profileData } = useContext(DoctorContext)
 
     const [messages, setMessages] = useState([])
     const [input, setInput] = useState('')
@@ -29,6 +30,7 @@ const DoctorChat = ({ docId, patientId, patientName, patientImage, onClose }) =>
     useEffect(() => {
         socketRef.current = io(backendUrl, {
             transports: ['websocket', 'polling'],
+            withCredentials: true,
             extraHeaders: { 'ngrok-skip-browser-warning': 'true' }
         })
 
@@ -86,18 +88,19 @@ const DoctorChat = ({ docId, patientId, patientName, patientImage, onClose }) =>
                 const res = await fetch(`${backendUrl}/api/chat/history/${roomId}`, {
                     headers: {
                         'ngrok-skip-browser-warning': 'true',
-                        'Authorization': `Bearer ${dToken}`
-                    }
+                    },
+                    credentials: 'include'
                 })
                 const data = await res.json()
                 if (data.success) setMessages(data.messages)
                 await axios.put(
                     backendUrl + `/api/chat/mark-read/${roomId}`,
                     { readBy: docId },
-                    { headers: { Authorization: `Bearer ${dToken}` } }
+                    { withCredentials: true }
                 )
             } catch (err) {
                 console.log(err)
+                toast.error('Unable to load chat history.')
             }
         }
         loadHistory()
@@ -122,13 +125,13 @@ const DoctorChat = ({ docId, patientId, patientName, patientImage, onClose }) =>
                 const { data } = await axios.post(
                     backendUrl + '/api/chat/upload-image',
                     formData,
-                    { headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${dToken}` } }
+                    { headers: { 'Content-Type': 'multipart/form-data' }, withCredentials: true }
                 )
                 if (data.success) {
                     socketRef.current.emit('send-message', {
                         roomId,
                         message: '',
-                        imageUrl: data.message.imageUrl,
+                        imageUrl: data.imageUrl,
                         sender: docId,
                         senderType: 'doctor',
                         name: 'Doctor'
@@ -136,6 +139,7 @@ const DoctorChat = ({ docId, patientId, patientName, patientImage, onClose }) =>
                 }
             } catch (err) {
                 console.log(err)
+                toast.error('Image upload failed. Please try again.')
             }
 
             setSelectedImage(null)
@@ -178,21 +182,11 @@ const DoctorChat = ({ docId, patientId, patientName, patientImage, onClose }) =>
     }
 
     //  Doctor call to  patient 
-    const startCall = (type) => {
-        // if  Room already joined then set  state 
-        setCallType(type)
-        setIsCalling(true)
-        setIncomingCallData(null)
-        setShowVideoCall(true)
-
-        console.log('[DoctorChat] Starting call:', callRoomId)
-    }
-
     return (
-        <div className='flex flex-col h-[500px] border rounded-2xl overflow-hidden shadow-xl bg-white'>
+        <div className='flex h-[min(650px,calc(100dvh-2rem))] min-h-105 w-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl'>
 
             {/* Header */}
-            <div className='bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-3 flex items-center gap-3'>
+            <div className='bg-linear-to-r from-blue-700 to-teal-600 px-4 py-3 flex items-center gap-3'>
                 {patientImage && (
                     <img src={patientImage} alt={patientName}
                         className='w-9 h-9 rounded-full object-cover border-2 border-white' />
@@ -222,7 +216,7 @@ const DoctorChat = ({ docId, patientId, patientName, patientImage, onClose }) =>
                     </p>
                 </div>
 
-                <div className='flex items-center gap-1 sm:gap-2 flex-shrink-0'>
+                <div className='flex items-center gap-1 sm:gap-2 shrink-0'>
                     <button
                         onClick={() => { setCallType('audio'); setIsCalling(true); setShowVideoCall(true) }}
                         className='w-8 h-8 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition text-sm sm:text-base'
@@ -303,7 +297,7 @@ const DoctorChat = ({ docId, patientId, patientName, patientImage, onClose }) =>
             </div>
 
             {/* Input */}
-            <div className='border-t p-2 sm:p-3 flex gap-2 bg-white flex-shrink-0 pb-[env(safe-area-inset-bottom,8px)]'>
+            <div className='border-t p-2 sm:p-3 flex gap-2 bg-white shrink-0 pb-[env(safe-area-inset-bottom,8px)]'>
 
                 <label className='cursor-pointer flex items-center justify-center w-9 h-9 rounded-full bg-gray-100 hover:bg-gray-200 transition'>
                     <img className='h-4 w-4' src={assets.attachIcon} alt="" />

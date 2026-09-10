@@ -13,17 +13,19 @@ export function MetricCard({ icon, label, value, sub, subColor = 'text-emerald-6
   return (
     <div
       onClick={onClick}
-      className={`${card} flex items-center gap-3 ${onClick ? 'cursor-pointer hover:shadow-md hover:-translate-y-0.5' : ''} transition-all duration-200 min-w-0 overflow-hidden`}
+      className={`${card} group flex items-center gap-3 ${onClick ? 'cursor-pointer hover:-translate-y-1 hover:shadow-[0_18px_38px_rgba(79,70,229,0.12)]' : ''} transition-all duration-200 min-w-0 overflow-hidden`}
     >
-      <div className='w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0'
-        style={{ background: icon.bg }}>
+      <div
+        className='w-11 h-11 sm:w-12 sm:h-12 rounded-2xl flex items-center justify-center shrink-0 ring-1 ring-white/70 shadow-inner'
+        style={{ background: icon.bg }}
+      >
         <img src={icon.emoji} alt='' className='w-5 h-5 sm:w-6 sm:h-6 object-contain' />
       </div>
       <div className='min-w-0 flex-1'>
-        <p className='text-xl sm:text-2xl font-bold text-slate-800 leading-tight'>{value ?? '—'}</p>
-        <p className='text-[11px] sm:text-xs text-slate-400 mt-0.5 leading-tight break-words'>{label}</p>
+        <p className='text-xl sm:text-2xl font-bold text-slate-800 leading-tight tracking-tight'>{value ?? '—'}</p>
+        <p className='text-[11px] sm:text-xs text-slate-500 mt-1 leading-tight wrap-break-words'>{label}</p>
         {sub && (
-          <p className={`text-[10px] sm:text-xs font-medium mt-0.5 leading-tight break-words ${subColor}`}>
+          <p className={`text-[10px] sm:text-xs font-medium mt-1 leading-tight wrap-break-words ${subColor}`}>
             {sub}
           </p>
         )}

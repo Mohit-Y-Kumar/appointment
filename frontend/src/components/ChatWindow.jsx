@@ -4,11 +4,12 @@ import { AppContext } from '../context/AppContext'
 import axios from 'axios'
 import VideoCall from './VideoCall'
 import { assets } from '../assets/assets'
+import { toast } from 'react-toastify'
 
 
 
 const ChatWindow = ({ appointmentId, doctorId, doctorName, doctorImage, onClose }) => {
-    const { backendUrl, userData,token } = useContext(AppContext)
+    const { backendUrl, userData } = useContext(AppContext)
 
     const [messages, setMessages] = useState([])
     const [input, setInput] = useState('')
@@ -27,7 +28,7 @@ const ChatWindow = ({ appointmentId, doctorId, doctorName, doctorImage, onClose 
     const messagesEndRef   = useRef(null)
     const typingTimeoutRef = useRef(null)
 
-    const chatRoomId = appointmentId
+    const chatRoomId = `chat_${appointmentId}`
    // Unique call room for this user and doctor
     const myCallRoomId = `call_${doctorId}_${userData?._id}`
 
@@ -35,6 +36,7 @@ const ChatWindow = ({ appointmentId, doctorId, doctorName, doctorImage, onClose 
     useEffect(() => {
         const socket = io(backendUrl, {
             transports: ['websocket', 'polling'],
+            withCredentials: true,
             extraHeaders: { 'ngrok-skip-browser-warning': 'true' }
         })
         socketRef.current = socket
@@ -93,6 +95,7 @@ const ChatWindow = ({ appointmentId, doctorId, doctorName, doctorImage, onClose 
             setCallRoomId(null)
             setInitialIncomingCall(null)
             setIsInitiator(false)
+            toast.info('Call was rejected.')
         })
 
         return () => { socket.disconnect() }
@@ -102,13 +105,16 @@ const ChatWindow = ({ appointmentId, doctorId, doctorName, doctorImage, onClose 
     useEffect(() => {
         const loadHistory = async () => {
             try {
-                const { data } = await axios.get(backendUrl + `/api/chat/history/${chatRoomId}`, { headers: { Authorization: `Bearer ${token}` } })
+                const { data } = await axios.get(backendUrl + `/api/chat/history/${chatRoomId}`, { withCredentials: true })
                 if (data.success) setMessages(data.messages)
-                await axios.put(backendUrl + `/api/chat/mark-read/${chatRoomId}`, { readBy: userData?._id }, { headers: { Authorization: `Bearer ${token}` } })
-            } catch (err) { console.log(err) }
+                await axios.put(backendUrl + `/api/chat/mark-read/${chatRoomId}`, { readBy: userData?._id }, { withCredentials: true })
+            } catch (err) {
+                console.log(err)
+                toast.error('Unable to load chat history.')
+            }
         }
         loadHistory()
-    }, [chatRoomId])
+    }, [chatRoomId, backendUrl, userData?._id])
 
     // Scroll to latest message
     useEffect(() => {
@@ -128,14 +134,17 @@ const ChatWindow = ({ appointmentId, doctorId, doctorName, doctorImage, onClose 
             formData.append('name', userData?.name)
             try {
                 const { data } = await axios.post(backendUrl + '/api/chat/upload-image', formData,
-                    { headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}` } })
+                    { headers: { 'Content-Type': 'multipart/form-data' }, withCredentials: true })
                 if (data.success) {
                     socketRef.current.emit('send-message', {
-                        roomId: chatRoomId, message: '', imageUrl: data.message.imageUrl,
+                        roomId: chatRoomId, message: '', imageUrl: data.imageUrl,
                         sender: userData?._id, senderType: 'user', name: userData?.name
                     })
                 }
-            } catch (err) { console.log(err) }
+            } catch (err) {
+                console.log(err)
+                toast.error('Image upload failed. Please try again.')
+            }
             setSelectedImage(null)
             setInput('')
             return
@@ -197,10 +206,10 @@ const ChatWindow = ({ appointmentId, doctorId, doctorName, doctorImage, onClose 
     }
 
     return (
-        <div className='flex flex-col h-[500px] border rounded-2xl overflow-hidden shadow-xl bg-white'>
+        <div className='flex h-[min(650px,calc(100dvh-2rem))] min-h-105 w-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl'>
 
             {/* Header */}
-            <div className='bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-3 flex items-center gap-3'>
+            <div className='bg-linear-to-r from-primary to-accent px-4 py-3 flex items-center gap-3'>
                 <img src={doctorImage} alt={doctorName}
                     className='w-9 h-9 rounded-full object-cover border-2 border-white' />
                 <div className='flex-1'>
@@ -313,7 +322,7 @@ const ChatWindow = ({ appointmentId, doctorId, doctorName, doctorImage, onClose 
                 {/* Selected Image */}
                 {selectedImage && (
                     <div className="flex items-center justify-between text-xs text-gray-500 mb-2 px-1">
-                        <span className="truncate max-w-[200px]">
+                        <span className="max-w-50 truncate">
                             {selectedImage.name}
                         </span>
                         <button

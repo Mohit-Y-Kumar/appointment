@@ -36,16 +36,21 @@ const Dashboard = () => {
   }
 
   return (
-    <div className='p-5 mt-5 md:p-6 max-w-[1400px]'>
+    <div className='mx-auto mt-5 w-full max-w-[1400px] p-4 sm:p-5 md:p-6 lg:p-7'>
 
       {/* Top bar */}
-      <div className='flex items-center justify-between mb-5 pb-4 border-b border-slate-100'>
-        <div>
-          <h1 className='text-lg font-semibold text-slate-800'>Admin Dashboard</h1>
-          <p className='text-xs text-slate-400 mt-0.5'>
-            DocNest &nbsp;·&nbsp;
-            {new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
-          </p>
+      <div className='mb-6 rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-[0_10px_25px_rgba(15,23,42,0.04)] backdrop-blur-sm'>
+        <div className='flex items-center justify-between gap-3'>
+          <div>
+            <h1 className='text-xl font-bold tracking-tight text-slate-800'>Admin Dashboard</h1>
+            <p className='text-xs text-slate-500 mt-1'>
+              DocNest &nbsp;·&nbsp;
+              {new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+            </p>
+          </div>
+          <div className='rounded-full bg-indigo-50 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-indigo-600'>
+            Live
+          </div>
         </div>
       </div>
 

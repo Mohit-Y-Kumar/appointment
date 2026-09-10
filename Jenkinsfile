@@ -1,118 +1,75 @@
 pipeline {
     agent any
 
+    parameters {
+        choice(name: 'ENVIRONMENT', choices: ['staging', 'prod'], description: 'Deployment target')
+        string(name: 'IMAGE_TAG', defaultValue: 'latest', description: 'Docker image tag to deploy')
+    }
+
     environment {
         DOCKERHUB_CREDS = 'dockerhub-creds'
         DOCKER_USER = 'mohityadv'
-        NETWORK = "docnest-network"
-        SERVER_IP = "192.168.56.10"
+        KUBE_CREDENTIALS = 'k8s-credentials'
+        APP_NAME = 'docnest'
+        DEPLOY_NAMESPACE = "${params.ENVIRONMENT}"
     }
 
     stages {
-
-        stage('Clone Repo') {
+        stage('Checkout') {
             steps {
                 git branch: 'main', url: 'https://github.com/Mohit-Y-Kumar/DocNest.git'
             }
         }
 
-        stage('Build Docker Images') {
+        stage('Test') {
             steps {
-                script {
-
-                    def BACKEND_IMAGE = "${DOCKER_USER}/docnest-backend:latest"
-                    def FRONTEND_IMAGE = "${DOCKER_USER}/docnest-frontend:latest"
-                    def ADMIN_IMAGE = "${DOCKER_USER}/docnest-admin:latest"
-
-                    sh "docker build -t ${BACKEND_IMAGE} ./backend"
-                       
-                    def razorpayKey = sh(
-                    script: "grep '^VITE_RAZORPAY_KEY_ID=' /home/vagrant/DocNest/frontend/.env | cut -d '=' -f2 | tr -d \"'\"",
-                    returnStdout: true
-                    ).trim()
-                    sh """
-                    docker build \
-                   --build-arg VITE_BACKEND_URL=http://${SERVER_IP}:4000 \
-                   --build-arg VITE_RAZORPAY_KEY_ID=${razorpayKey} \
-                    -t ${FRONTEND_IMAGE} ./frontend
-                    """
-
-                    sh """
-                    docker build \
-                    --build-arg VITE_BACKEND_URL=http://${SERVER_IP}:4000 \
-                    -t ${ADMIN_IMAGE} ./admin
-                    """
-                }
+                sh 'cd backend && npm test'
             }
         }
 
-        stage('Login to DockerHub') {
+        stage('Build Images') {
             steps {
-                withCredentials([usernamePassword(credentialsId: DOCKERHUB_CREDS, usernameVariable: 'USER', passwordVariable: 'PASS')]) {
-                    sh "echo \$PASS | docker login -u \$USER --password-stdin"
+                script {
+                    def backendImage = "${DOCKER_USER}/docnest-backend:${params.IMAGE_TAG}"
+                    def frontendImage = "${DOCKER_USER}/docnest-frontend:${params.IMAGE_TAG}"
+                    def adminImage = "${DOCKER_USER}/docnest-admin:${params.IMAGE_TAG}"
+
+                    sh "docker build -t ${backendImage} ./backend"
+
+                    sh "docker build --build-arg VITE_BACKEND_URL=https://api.${params.ENVIRONMENT}.docnest.example.com --build-arg VITE_RAZORPAY_KEY_ID=${env.RAZORPAY_KEY_ID ?: 'PLACEHOLDER'} -t ${frontendImage} ./frontend"
+                    sh "docker build --build-arg VITE_BACKEND_URL=https://api.${params.ENVIRONMENT}.docnest.example.com -t ${adminImage} ./admin"
                 }
             }
         }
 
         stage('Push Images') {
             steps {
-                script {
-                    def BACKEND_IMAGE = "${DOCKER_USER}/docnest-backend:latest"
-                    def FRONTEND_IMAGE = "${DOCKER_USER}/docnest-frontend:latest"
-                    def ADMIN_IMAGE = "${DOCKER_USER}/docnest-admin:latest"
-
-                    sh "docker push ${BACKEND_IMAGE}"
-                    sh "docker push ${FRONTEND_IMAGE}"
-                    sh "docker push ${ADMIN_IMAGE}"
+                withCredentials([usernamePassword(credentialsId: DOCKERHUB_CREDS, usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+                    sh 'echo "$PASS" | docker login -u "$USER" --password-stdin'
+                    sh "docker push ${DOCKER_USER}/docnest-backend:${params.IMAGE_TAG}"
+                    sh "docker push ${DOCKER_USER}/docnest-frontend:${params.IMAGE_TAG}"
+                    sh "docker push ${DOCKER_USER}/docnest-admin:${params.IMAGE_TAG}"
                 }
             }
         }
 
-        stage('Remove Old Containers') {
+        stage('Deploy to Kubernetes') {
             steps {
-                script {
-                    sh "docker rm -f backend || true"
-                    sh "docker rm -f frontend || true"
-                    sh "docker rm -f admin || true"
-                    sh "docker network rm ${NETWORK} || true"
-                }
-            }
-        }
-
-        stage('Run Containers') {
-            steps {
-                script {
-
-                    def BACKEND_IMAGE = "${DOCKER_USER}/docnest-backend:latest"
-                    def FRONTEND_IMAGE = "${DOCKER_USER}/docnest-frontend:latest"
-                    def ADMIN_IMAGE = "${DOCKER_USER}/docnest-admin:latest"
-
-                    sh "docker network create ${NETWORK} || true"
-
-                    sh """
-                    docker run -d \
-                      --name backend \
-                      --network ${NETWORK} \
-                      -p 4000:4000 \
-                      --env-file /home/vagrant/DocNest/backend/.env \
-                      ${BACKEND_IMAGE}
-                    """
-
-                    sh """
-                    docker run -d \
-                      --name frontend \
-                      --network ${NETWORK} \
-                      -p 3000:80 \
-                      ${FRONTEND_IMAGE}
-                    """
-
-                    sh """
-                    docker run -d \
-                      --name admin \
-                      --network ${NETWORK} \
-                      -p 3001:80 \
-                      ${ADMIN_IMAGE}
-                    """
+                withCredentials([file(credentialsId: KUBE_CREDENTIALS, variable: 'KUBECONFIG_FILE')]) {
+                    sh '''
+                        mkdir -p "$HOME/.kube"
+                        cp "$KUBECONFIG_FILE" "$HOME/.kube/config"
+                        chmod 600 "$HOME/.kube/config"
+                        kubectl apply -f k8s/namespaces.yaml
+                        kubectl -n "$DEPLOY_NAMESPACE" apply -f k8s/configmap.yaml
+                        kubectl -n "$DEPLOY_NAMESPACE" apply -f k8s/backend-deployment.yaml
+                        kubectl -n "$DEPLOY_NAMESPACE" apply -f k8s/backend-service.yaml
+                        kubectl -n "$DEPLOY_NAMESPACE" apply -f k8s/frontend-deployment.yaml
+                        kubectl -n "$DEPLOY_NAMESPACE" apply -f k8s/frontend-service.yaml
+                        kubectl -n "$DEPLOY_NAMESPACE" apply -f k8s/admin-deployment.yaml
+                        kubectl -n "$DEPLOY_NAMESPACE" apply -f k8s/admin-service.yaml
+                        kubectl -n "$DEPLOY_NAMESPACE" apply -f k8s/ingress.yaml
+                    '''
                 }
             }
         }
@@ -120,10 +77,10 @@ pipeline {
 
     post {
         success {
-            echo "DocNest deployed successfully "
+            echo "DocNest ${params.ENVIRONMENT} deployment succeeded."
         }
         failure {
-            echo "Deployment failed "
+            echo "DocNest ${params.ENVIRONMENT} deployment failed."
         }
     }
 }

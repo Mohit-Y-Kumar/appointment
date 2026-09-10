@@ -13,7 +13,7 @@ const DoctorMetricCards = ({ dashData, currency, ratingsData, earningsTrend, app
     const totalReviews = ratingsData?.totalReviews ?? 0
 
     return (
-        <div className='grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4'>
+        <div className='grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4'>
             <MetricCard
                 label='Total Earnings'
                 value={`${currency}${(dashData.earnings ?? 0).toLocaleString()}`}

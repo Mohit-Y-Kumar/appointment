@@ -1,264 +1,413 @@
-# DocNest 🩺
+# DocNest
 
-DocNest is a full-stack **doctor appointment booking platform** built on the MERN stack. It has three separate apps — a patient-facing site, an admin/doctor dashboard, and a Node/Express API — and includes real-time chat, video/audio calling, an AI symptom-checker chatbot, online payments, and analytics dashboards for doctors and admins.
+DocNest is a full-stack healthcare booking platform built for appointment management, doctor access, patient self-service, and secure payments. The project is split into three apps:
 
-## Table of Contents
+- Frontend: a patient-facing React app
+- Admin: doctor and admin dashboard
+- Backend: Express API with MongoDB, JWT auth, Socket.IO, Razorpay, Cloudinary, and AI-powered chat
 
-- [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Repository Structure](#repository-structure)
-- [How It Works](#how-it-works)
-- [Getting Started](#getting-started)
-- [Environment Variables](#environment-variables)
-- [API Reference](#api-reference)
-- [Real-time Events (Socket.io)](#real-time-events-socketio)
-- [Data Models](#data-models)
-- [Troubleshooting](#troubleshooting)
+## Overview
 
-## Features
+This project supports:
 
-### For Patients (`frontend/`)
-- Register/login with JWT-based authentication
-- Browse doctors by speciality, view profiles, ratings, and availability
-- Book, view, and cancel appointments by date/time slot
-- Pay appointment fees online via **Razorpay**, with signature-verified payment confirmation
-- Rate and review doctors after a completed appointment (star rating + written comment, editable/deletable)
-- Real-time **chat** with a doctor (text + image messages, typing indicators, read receipts)
-- **Voice and video calls** with a doctor over WebRTC, signalled through Socket.io
-- **AI Symptom Checker / Chatbot** — describes symptoms in natural language (English, Hindi, or Hinglish) and get a suggested medical speciality, powered by Groq's `llama-3.3-70b-versatile` model
-- View and edit personal profile (photo, phone, address, DOB, gender)
-- Automatic email notifications for booking, cancellation, and successful payment
+- patient registration and login
+- email verification before first login
+- forgot-password and single-use password reset links
+- doctor search, filtering, profiles, and availability
+- appointment booking and cancellation
+- refund requests and refund status tracking for paid appointments
+- secure payment verification with Razorpay
+- real-time chat and call signaling
+- doctor/admin dashboards and analytics
+- AI symptom assistant for medical specialty guidance
+- production-ready environment validation, health endpoints, and deployment manifests
 
-### For Doctors (`admin/`, doctor role)
-- Secure doctor login (separate from patient login)
-- Dashboard with earnings, appointment count, unique patient count, average rating, and today's upcoming appointments
-- Accept/complete/cancel appointments
-- Visit statistics (new vs. returning patients) and revenue charts, filterable by daily/monthly/yearly period
-- View patient ratings and review breakdowns
-- Update profile (fees, address, availability toggle)
-- Live chat and video/audio calls with patients
+Email and password recovery links are sent through the configured SMTP provider. Reset tokens are stored hashed, expire after one hour, and invalidate existing user sessions after a successful password change.
 
-### For Admins (`admin/`, admin role)
-- Separate admin login, authenticated against `ADMIN_EMAIL` / `ADMIN_PASSWORD`
-- Add new doctors (with photo upload to Cloudinary)
-- View and toggle availability for all doctors
-- View and cancel any appointment platform-wide
-- Platform-wide dashboard: total doctors, patients, appointments, revenue, and today's cancellations
+## Tech stack
 
-### Platform-wide
-- Doctor profile view/like counters (`views`, `likes`) with per-user like tracking
-- Rate-limited APIs (200 req/15min globally, 20 req/15min on auth-sensitive routes) and Helmet-based HTTP security headers
-- CORS allow-list driven entirely by an `ALLOWED_ORIGINS` environment variable
+- Frontend: React + Vite
+- Admin app: React + Vite
+- Backend: Node.js + Express
+- Database: MongoDB + Mongoose
+- Auth: JWT + bcrypt + cookie-based sessions
+- Real-time: Socket.IO
+- Payments: Razorpay
+- Media: Cloudinary
+- Emails: Nodemailer
+- Security: Helmet, CORS, rate limiting, CSRF validation
+- Deployment: Docker, Docker Compose, Kubernetes, Jenkins
 
-## Tech Stack
+## High-level architecture
 
-| Layer | Technology |
-|---|---|
-# | Patient frontend | 
- React 19 (Vite), Tailwind CSS 4, Axios, React Router, Recharts, react-toastify |
-# | Admin/Doctor dashboard | 
-React 19 (Vite), Tailwind CSS 4, Axios, React Router, Recharts |
-# | Backend 
-| Node.js, Express 5 |
-| Database | MongoDB (Mongoose) |
-| Real-time | Socket.io (chat, calls, WebRTC signalling) |
-| Video/Audio calling | `simple-peer` (WebRTC) over Socket.io signalling |
-| AI Chatbot | Groq SDK (`llama-3.3-70b-versatile`) |
-| Auth | JSON Web Tokens (JWT), bcrypt |
-| Payments | Razorpay (order creation + HMAC signature verification) |
-| Media storage | Cloudinary |
-| Email | Nodemailer (Gmail transport) |
-| Security | Helmet, express-rate-limit, CORS allow-list |
-| Deployment | Docker, Docker Compose, Kubernetes manifests, Jenkins pipeline |
+DocNest uses a layered architecture with separate patient and operations clients. In production, Nginx Ingress routes the patient hostname to the frontend and `/api` requests to the backend; the admin hostname routes to the admin portal.
 
-## Repository Structure
-
+```text
+┌──────────────────────────────────────────────────────────────────────┐
+│                             CLIENT LAYER                             │
+│  Patient web app (React + Vite)   Admin/doctor portal (React + Vite) │
+└──────────────────────────────┬───────────────────────────────────────┘
+                               │ HTTPS / REST / Socket.IO
+                               ▼
+┌──────────────────────────────────────────────────────────────────────┐
+│                         EDGE AND TRANSPORT                           │
+│  Nginx Ingress: TLS, host routing, and /api routing                  │
+│  REST API: HTTP-only auth cookies       Socket.IO: chat and calls    │
+└──────────────────────────────┬───────────────────────────────────────┘
+                               ▼
+┌──────────────────────────────────────────────────────────────────────┐
+│                         APPLICATION LAYER                            │
+│  Express routes → security middleware → domain controllers           │
+│  CORS · CSRF · rate limits · role auth · uploads · audit logging     │
+└──────────────────────────────┬───────────────────────────────────────┘
+                               ▼
+┌──────────────────────────────────────────────────────────────────────┐
+│                      DATA AND INTEGRATIONS                            │
+│  Mongoose models → MongoDB                                            │
+│  Razorpay (payments/refunds) · Cloudinary (media)                    │
+│  SMTP (verification/recovery email) · Groq (AI symptom assistant)    │
+└──────────────────────────────────────────────────────────────────────┘
 ```
+
+### Responsibilities by layer
+
+- **Client layer:** The patient app handles discovery, appointments, payments, profiles, chat, and the symptom assistant. The admin portal supports doctor onboarding, appointment operations, analytics, and doctor access.
+- **Transport and middleware:** Express serves REST endpoints while Socket.IO handles real-time chat and call signaling. Shared middleware applies origin checks, security headers, CSRF validation, rate limiting, authentication, uploads, and audit logging.
+- **Application layer:** Role-specific routes delegate to controllers for user, doctor, admin, appointment, payment, refund, review, chat, and call workflows. Controllers use Mongoose models for transactional state changes and token/session persistence.
+- **Integration layer:** MongoDB stores platform data; Razorpay processes payments and refunds; Cloudinary stores media; SMTP sends account emails; and Groq powers AI-assisted symptom guidance.
+
+### Deployment topology
+
+For local development, the frontend, admin portal, and backend run independently on ports `5173`, `5174`, and `4000`. Docker Compose packages the three applications as containers. Kubernetes adds separate services and deployments, TLS through cert-manager, health probes, resource limits, and host-based ingress routing.
+
+## Architecture reference
+
+### Authentication flow
+
+Patient and doctor accounts use role-specific JWT access and refresh cookies. Registration validates the input, hashes the password with bcrypt, and stores the account in MongoDB. Email verification is required before the first login.
+
+```text
+Login request
+    ↓
+Find account and compare bcrypt password
+    ↓
+Issue a short-lived access JWT and a rotating refresh token
+    ↓
+Hash the refresh token and store it with its role, subject, family, and expiry
+    ↓
+Set role-specific HTTP-only cookies
+    ↓
+Protected middleware verifies the JWT and authorizes the role
+```
+
+When an access token expires, the client calls `/refresh`. The backend verifies the hashed refresh token, checks that it is active, unexpired, and associated with the correct role and account, then rotates it and retries the original request. Logout revokes the refresh token family and clears the cookies. Admin login validates `ADMIN_EMAIL` and `ADMIN_PASSWORD_HASH` before issuing admin-scoped tokens.
+
+### Core data model
+
+| Model | Purpose and important fields |
+|---|---|
+| `User` | Patient identity, verified email, bcrypt password, contact details, address, and Cloudinary image URL |
+| `Doctor` | Professional profile, speciality, fees, availability, appointment slots, ratings, views, and likes |
+| `Appointment` | Patient, doctor, date/time slot, booking snapshots, amount, payment state, cancellation, and completion state |
+| `Message` | Chat room, sender and role, sanitized text, optional media, timestamps, and read state |
+| `Call` | Caller, recipient, appointment, call type, lifecycle status, timestamps, and duration |
+| `Review` | Doctor, patient, completed appointment, rating, comment, and timestamps |
+| `Payment` | Appointment, user, amount, Razorpay order/payment IDs, signature, and payment status |
+| `RefreshToken` | Hashed token, token family, JWT ID, subject, role, revocation state, and expiry |
+| `Refund` | Appointment, payment, requested amount, processing state, gateway refund ID, and audit timestamps |
+| `AuditLog` | Actor, request metadata, action, resource, and outcome for operational traceability |
+
+Frequently queried fields should be indexed, including account email, refresh-token hash, appointment creation date, message room and time, and token expiry. Appointment, payment, and refund state changes use MongoDB transactions where atomicity is required.
+
+### Security controls
+
+- **Password security:** Passwords are stored as bcrypt hashes; plaintext passwords and secrets are never persisted.
+- **Token security:** Access tokens are short-lived. Refresh tokens are hashed in MongoDB, rotated on use, scoped to a role, and revocable.
+- **CSRF protection:** State-changing browser requests must provide the CSRF token issued by the backend and stored in the protected cookie.
+- **CORS and headers:** `ALLOWED_ORIGINS` controls credentialed origins, while Helmet supplies security headers including HSTS, `nosniff`, frame protection, and referrer policy.
+- **Rate limiting:** General API traffic, authentication routes, AI requests, and payment webhooks use separate limits. Webhook processing is also idempotent by provider event ID.
+- **Input validation:** Email, password, address, pagination, identifiers, and payment fields are validated before controller logic runs.
+- **XSS defense:** Chat messages and review comments are sanitized on input and sanitized again when retrieved.
+- **Authorization:** User, doctor, admin, and appointment-participant middleware enforce role and resource ownership boundaries.
+- **Operational security:** Metrics require admin authentication, audit logging is non-blocking, and production environment validation fails startup when critical configuration is missing.
+
+### Real-time communication
+
+Socket.IO is attached to the backend HTTP server. Authenticated clients join appointment or conversation rooms, and the server persists relevant events before broadcasting them.
+
+| Event group | Purpose |
+|---|---|
+| Chat | Send and receive messages, typing indicators, read receipts, and seen state |
+| Calls | Start, accept, reject, end, and miss audio/video calls |
+| WebRTC signaling | Relay offers, answers, and ICE candidates between participants |
+| Presence and rooms | Join or leave scoped rooms and deliver participant notifications |
+
+Socket authentication is revalidated periodically and again for sensitive events such as sending a message or initiating a call. Invalid sessions are disconnected.
+
+### Development conventions
+
+- Keep routes focused on transport and authorization; place business workflows in controllers.
+- Reuse validation and sanitization helpers from `backend/utils/`.
+- Return a consistent `{ success, data, message }` response shape where the endpoint contract permits it.
+- Use descriptive names and keep controllers focused on one responsibility.
+- Use transactions for multi-document appointment, payment, refund, or token operations.
+- Add pagination to collection endpoints and select only the fields required by the client.
+- Test authentication, validation, transactional behavior, and external-service failure paths.
+
+### Deployment checklist
+
+```text
+Environment: set required variables, strong JWT secrets, bcrypt admin hash,
+             and the production origin allow-list.
+Database:    use authenticated MongoDB Atlas or a replica-set deployment,
+             create required indexes, and configure backups.
+Security:    use HTTPS, secure cookies, correct CORS, CSRF protection,
+             rate limits, and protected metrics.
+Operations: enable structured logs and alerts, health probes, and API
+            response/database performance monitoring.
+Scaling:    run behind Nginx or an ingress load balancer, scale stateless
+            services horizontally, and use CDN-backed media storage.
+```
+
+Docker Compose runs the three application containers for local or single-host deployment. Kubernetes uses separate frontend, admin, and backend deployments and services, with cert-manager providing TLS and ingress routing. Secrets belong in Kubernetes Secrets or a cloud secret manager, never in the repository.
+
+### Performance guidance
+
+- Index frequently searched and sorted fields and use `.lean()` for read-only Mongoose queries.
+- Paginate large collections and use `.select()` to reduce response size.
+- Cache short-lived doctor and profile reads where freshness allows it; use Redis for shared cache or session state when scaling horizontally.
+- Compress API responses, lazy-load frontend routes and images, and use Cloudinary/CDN delivery for media.
+- Track API latency, database query performance, error rates, and external provider failures.
+
+## Repository structure
+
+```text
 DocNest/
 ├── backend/
-│   ├── config/          # mongodb.js, cloudinary.js, mailer.js, emailTemplates.js
-│   ├── controller/      # userController, doctorController, adminController,
-│   │                     #   chatController (AI), reviewController, callController, uploadController
-│   ├── middleware/       # authUser, authDoctor, authAdmin, multer (file uploads)
-│   ├── models/            # user, doctor, appointment, review, message, call, payment
-│   ├── routes/            # userRoute, doctorRoute, adminRoute, chatRoute, reviewRoute, callRoute
-│   └── server.js          # Express app + Socket.io server (chat, calls, WebRTC signalling)
-├── frontend/               # Patient-facing React app
-│   └── src/
-│       ├── pages/          # Home, Doctors, Appointment, MyAppointments, MyProfile, Login, About, Contact
-│       └── components/     # Navbar, DoctorCard, ChatWindow, VideoCall, VoiceChat, SymptomChecker, Chatbot, Review, ...
-├── admin/                   # Admin + Doctor dashboard React app
-│   └── src/
-│       ├── pages/Admin/     # Dashboard, AddDoctor, DoctorList, AllAppointments
-│       ├── pages/Doctor/    # DoctorDashboard, DoctorAppointments, DoctorChat, DoctorVideoCall, DoctorProfile
-│       └── context/          # AdminContext, DoctorContext, AppContext (auth/token state)
-├── k8s/                      # Kubernetes manifests (deployments, services, ingress, configmap, secret)
-├── docker-compose.yml        # Local multi-container orchestration
-├── Jenkinsfile                # CI/CD pipeline
-└── README.md
+│   ├── config/
+│   ├── controller/
+│   ├── middleware/
+│   ├── models/
+│   ├── routes/
+│   ├── sockets/
+│   ├── utils/
+│   ├── test/
+│   ├── .env.example
+│   ├── package.json
+│   └── server.js
+├── frontend/
+│   ├── src/
+│   ├── public/
+│   ├── package.json
+│   └── README.md
+├── admin/
+│   ├── src/
+│   ├── public/
+│   ├── package.json
+│   └── README.md
+├── k8s/
+│   ├── configmap.yaml
+│   ├── ingress.yaml
+│   ├── backend-deployment.yaml
+│   ├── frontend-deployment.yaml
+│   ├── admin-deployment.yaml
+│   ├── secret.yaml.example
+│   └── ...
+├── docker-compose.yml
+├── Jenkinsfile
+├── Readme.md
+└── package.json
 ```
 
-## How It Works
+## Prerequisites
 
-**Authentication** — Patients and doctors register/log in separately and each receive a JWT (`{ id }` payload, `JWT_EXPIRES_IN`-day expiry — 7 days by default). Admins log in with credentials checked directly against `ADMIN_EMAIL`/`ADMIN_PASSWORD` env vars and receive a JWT with a `role: 'admin'` payload. Every protected route requires `Authorization: Bearer <token>`, verified by `authUser.js`, `authDoctor.js`, or `authAdmin.js` respectively.
-
-**Booking flow** — A patient picks a doctor and an available slot; `bookAppointment` snapshots both the user's and doctor's data into the appointment document (so historical records don't change if a profile is later edited), marks the slot as booked on the doctor record, and emails a confirmation. Cancelling frees the slot back up and emails a cancellation notice.
-
-**Payments** — `paymentRazorpay` creates (or re-fetches) a Razorpay order for an appointment. After the client completes checkout, `verifyRazorpay` recomputes the HMAC-SHA256 signature server-side and only marks the appointment as paid if it matches — preventing forged payment confirmations. A success email is sent on verification.
-
-**Reviews** — A patient can only rate a *completed* appointment they own. Rating and commenting are two separate steps (`isRated` → `isReviewed`), and a Mongoose post-save/post-delete hook automatically recalculates the doctor's `averageRating` and `totalReviews` whenever a review changes.
-
-**Chat & calls** — All real-time features run through a single Socket.io server in `server.js`. Chat messages and read receipts are persisted to MongoDB (`messageModel`) and broadcast to the room. Calls are tracked in `callModel` with status transitions (`ringing` → `accepted`/`rejected` → `ended`) and automatic duration calculation; WebRTC offer/answer/ICE candidates are relayed via the generic `signal` event.
-
-**AI Symptom Checker** — `chatController.js` sends the conversation to Groq's `llama-3.3-70b-versatile` model with a system prompt constrained to DocNest's actual doctor specialities (General physician, Gynecologist, Dermatologist, Pediatricians, Neurologist, Gastroenterologist). The model is instructed to avoid diagnoses/prescriptions and to tag its reply with a `SPECIALITY:` line when it recommends booking a particular type of doctor, which the frontend can parse to suggest doctors.
-
-**Doctor/admin analytics** — Visit stats and revenue are computed on the fly from appointment records, bucketed by day/month/year depending on the requested `period` query param, and returned as chart-ready arrays for Recharts.
-
-## Getting Started
-
-### Prerequisites
-- Node.js 18+
-- MongoDB (local or Atlas)
+- Node.js 20+
+- MongoDB or MongoDB Atlas
 - Cloudinary account
-- Razorpay account (test keys work for development)
-- Groq API key (for the AI chatbot)
-- A Gmail account (or adjust `mailer.js` for a different provider) for outgoing email
+- Razorpay account
+- Groq API key
+- SMTP-capable email provider
+- Docker and Docker Compose for local containerized setup
 
-### 1. Clone and install
+## Local development
+
+1. Clone the repository
 
 ```bash
 git clone https://github.com/Mohit-Y-Kumar/DocNest.git
 cd DocNest
 ```
 
-Install each app's dependencies:
+2. Install backend dependencies
 
 ```bash
-cd backend && npm install
-cd ../frontend && npm install
-cd ../admin && npm install
+cd backend
+npm install
 ```
 
-### 2. Configure the backend
+3. Create backend environment variables
 
-Create `backend/.env`:
-
-```env
-PORT=4000
-
-# NOTE: the code reads this as MONGO_URl (capital letters, lowercase L) — see Troubleshooting
-MONGO_URl=your_mongodb_connection_string
-
-JWT_SECRET=your_jwt_secret
-JWT_EXPIRES_IN=7d
-
-CLOUDINARY_CLOUD_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_cloudinary_key
-CLOUDINARY_API_SECRET=your_cloudinary_secret
-
-RAZORPAY_KEY_ID=your_razorpay_key_id
-RAZORPAY_KEY_SECRET=your_razorpay_key_secret
-CURRENCY=INR
-
-EMAIL_USER=your_gmail_address
-EMAIL_PASS=your_gmail_app_password
-
-ADMIN_EMAIL=your_admin_login_email
-ADMIN_PASSWORD=your_admin_login_password
-
-GROQ_API_KEY=your_groq_api_key
-
-# Comma-separated list of allowed frontend/admin origins, no spaces needed
-ALLOWED_ORIGINS=http://localhost:5173,http://localhost:5174
+```bash
+cp .env.example .env
 ```
 
-Start it:
+Set values for:
+
+- PORT
+- NODE_ENV
+- MONGO_URI
+- JWT_SECRET
+- ADMIN_EMAIL
+- ADMIN_PASSWORD_HASH
+- FRONTEND_URL
+- APP_URL
+- ALLOWED_ORIGINS
+- EMAIL_USER
+- EMAIL_PASS
+- CLOUDINARY_CLOUD_NAME
+- CLOUDINARY_API_KEY
+- CLOUDINARY_API_SECRET
+- RAZORPAY_KEY_ID
+- RAZORPAY_KEY_SECRET
+- RAZORPAY_WEBHOOK_SECRET
+- GROQ_API_KEY
+
+4. Start backend
 
 ```bash
 cd backend
 npm start
 ```
 
-Runs at `http://localhost:4000`.
-
-### 3. Configure and run the patient frontend
-
-Create `frontend/.env`:
-
-```env
-VITE_BACKEND_URL=http://localhost:4000
-VITE_RAZORPAY_KEY_ID=your_razorpay_key_id
-```
+5. Start frontend
 
 ```bash
 cd frontend
+npm install
 npm run dev
 ```
 
-Runs at `http://localhost:5173` by default.
-
-### 4. Configure and run the admin/doctor dashboard
-
-Create `admin/.env`:
-
-```env
-VITE_BACKEND_URL=http://localhost:4000
-```
+6. Start admin app
 
 ```bash
 cd admin
+npm install
 npm run dev
 ```
 
-Runs at `http://localhost:5174` by default.
+The app runs on local dev ports:
 
-> Whichever origins you run the frontend/admin apps on **must** be listed in the backend's `ALLOWED_ORIGINS`, and the backend must be restarted after any `.env` change.
+- backend: http://localhost:4000
+- frontend: http://localhost:5173
+- admin: http://localhost:5174
 
-## Environment Variables
+## Authentication flows
 
-Reference (from `k8s/secret.yaml.example` and actual source usage):
+### Patient account
 
-| Variable | Used by | Purpose |
-|---|---|---|
-| `PORT` | backend | API server port (default 4000) |
-| `MONGO_URl` | backend | MongoDB connection string *(note the unusual casing — see Troubleshooting)* |
-| `JWT_SECRET` | backend | Secret used to sign/verify JWTs |
-| `JWT_EXPIRES_IN` | backend | Token lifetime, e.g. `7d` |
-| `CLOUDINARY_CLOUD_NAME` / `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` | backend | Image upload storage |
-| `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` | backend | Payment order creation & verification |
-| `CURRENCY` | backend | Currency code for Razorpay orders (e.g. `INR`) |
-| `EMAIL_USER` / `EMAIL_PASS` | backend | Gmail account used to send transactional emails |
-| `ADMIN_EMAIL` / `ADMIN_PASSWORD` | backend | Hardcoded admin login credentials |
-| `GROQ_API_KEY` | backend | AI chatbot / symptom checker |
-| `ALLOWED_ORIGINS` | backend | Comma-separated CORS allow-list |
-| `VITE_BACKEND_URL` | frontend, admin | Base URL the React apps call for the API |
-| `VITE_RAZORPAY_KEY_ID` | frontend | Public Razorpay key used client-side at checkout |
+1. Register at `/login`.
+2. Open the verification link sent by email.
+3. The account is marked verified and the user receives secure HTTP-only access and refresh cookies.
+4. Use **Forgot password?** on the login form to request a one-hour reset link.
+5. After resetting the password, log in again. Previous user sessions are revoked.
 
-## API Reference
+Verification and reset tokens are single-use. If verification email delivery fails, the login screen provides a resend-verification action.
 
-All protected routes require `Authorization: Bearer <token>`.
+### Doctor account
 
-### User (`/api/user`)
-| Method | Route | Auth | Description |
-|---|---|---|---|
-| POST | `/register` | – | Create a patient account |
-| POST | `/login` | – | Patient login |
-| GET | `/get-profile` | User | Get logged-in patient's profile |
-| POST | `/update-profile` | User | Update profile (+ optional image upload) |
-| POST | `/book-appointment` | User | Book a doctor slot |
-| GET | `/appointments` | User | List own appointments |
-| POST | `/cancel-appointment` | User | Cancel an appointment |
-| POST | `/payment-razorpay` | User | Create/fetch a Razorpay order |
-| POST | `/verifyRazorpay` | User | Verify payment signature |
+Doctors are created by an administrator. The administrator sends the doctor the verification token and completes verification from the admin onboarding screen. A doctor can log in only after the account email is verified.
 
-### Doctor (`/api/doctor`)
-| Method | Route | Auth | Description |
-|---|---|---|---|
-| GET | `/list` | – | Public list of doctors |
-| POST | `/login` | – | Doctor login |
-| GET | `/appointments` | Doctor | List own appointments |
-| POST | `/complete-appointment` | Doctor | Mark appointment complete |
-| POST | `/cancel-appointment` | Doctor | Cancel appointment |
+## Appointment and refund workflows
+
+- User, admin, and doctor appointment screens use server-side pagination.
+- Paid users can request a refund from **My Appointments** and see the refund status there.
+- Refund processing atomically claims a request before calling Razorpay, preventing concurrent duplicate processing.
+- After a successful gateway refund, the refund record and appointment cancellation are committed together in a database transaction.
+
+## API highlights
+
+User routes are prefixed with `/api/user`:
+
+- `POST /register`
+- `POST /verify-email`
+- `POST /resend-verification`
+- `POST /login`
+- `POST /forgot-password`
+- `POST /reset-password`
+- `POST /refresh`
+- `POST /logout`
+- `GET /appointments?page=1&limit=10`
+- `POST /request-refund/:appointmentId`
+- `GET /my-refunds?page=1&limit=10`
+
+Access and refresh tokens are stored in role-specific HTTP-only cookies. Refresh tokens are hashed in MongoDB and rotated on every refresh request.
+
+## Production deployment
+
+This project includes Kubernetes manifests for a production-like deployment:
+
+- ingress routing
+- TLS setup via cert-manager
+- namespace separation for staging and prod
+- resource limits and health probes
+- Docker image-based rollout
+- Jenkins-based CI/CD pipeline
+
+For production, keep secrets outside the repo and inject them through Kubernetes Secret objects or your cloud secret manager.
+
+## Health and observability
+
+The backend exposes:
+
+- /health
+- /ready
+- /metrics (admin authentication required)
+- /api/docs
+
+These are used for health checks, readiness checks, and deployment validation.
+
+## Security notes
+
+- auth cookies are role-specific and hardened
+- CORS is restricted by ALLOWED_ORIGINS
+- CSRF validation is enabled for state-changing requests
+- rate limiting is applied to auth and AI-related routes
+- password recovery tokens are hashed, time-limited, and single-use
+- refund processing uses an atomic claim and transaction-backed state updates
+- socket-sensitive events revalidate the authenticated session
+- metrics are protected from public access
+- Content Security Policy headers are enabled
+- audit logs are emitted without blocking request flow
+- production env validation prevents missing critical settings at startup
+
+Never commit `.env` files or provider credentials. Production admin authentication requires `ADMIN_PASSWORD_HASH`; plaintext `ADMIN_PASSWORD` authentication is not supported.
+
+## API documentation
+
+See [backend/API.md](backend/API.md) for the full endpoint reference.
+
+## Validation commands
+
+Run these commands from the project root:
+
+```bash
+npm --prefix backend test
+npm --prefix frontend run lint
+npm --prefix frontend run build
+npm --prefix admin run lint
+npm --prefix admin run build
+```
+
+The backend test suite includes security and API checks. Some integration tests remain marked as TODO until they are connected to a test database and payment provider mocks.
+
+## CI/CD
+
+The repository includes a Jenkins pipeline for building Docker images and deploying to Kubernetes. Use the environment parameter to choose staging or prod before deployment.
+
+## License
+
+This project is intended for internal or educational use unless a separate license agreement is provided.
+
 | GET | `/dashboard` | Doctor | Earnings, patient count, ratings summary |
 | GET | `/profile` | Doctor | Own profile |
 | POST | `/update-profile` | Doctor | Update fees/address/availability |
@@ -333,7 +482,7 @@ All protected routes require `Authorization: Bearer <token>`.
 
 - **CORS errors in the browser console** — add the failing origin to `ALLOWED_ORIGINS` in `backend/.env` (comma-separated, no spaces required) and restart the backend. Environment variables are only read on startup.
 - **401 Unauthorized on protected routes** — the stored token is missing, malformed, or expired. Run `localStorage.removeItem('token')` in the browser console and log in again.
-- **MongoDB fails to connect** — `backend/config/mongodb.js` reads the connection string from **`MONGO_URl`** (note the unusual capitalization: `MONGO_URl`, not `MONGODB_URI`). The Kubernetes secret example (`k8s/secret.yaml.example`) uses `MONGODB_URI` instead — if deploying to Kubernetes, either rename the key to `MONGO_URl` in your secret or update `mongodb.js` to match, or the backend will exit on startup with `MONGO_URl is not defined`.
+- **MongoDB fails to connect** — set `MONGO_URI` (or `MONGODB_URI`) to the connection string. Booking transactions require MongoDB Atlas, a replica set, or a sharded deployment.
 - **AI chatbot returns an error** — confirm `GROQ_API_KEY` is set; the endpoint throws `GROQ_API_KEY is not configured` otherwise. A `429` response means you've hit Groq's rate limit — the API returns a suggested wait time.
 - **Rate limit errors** — auth-sensitive routes are limited to 20 requests/15 minutes per IP; all other routes to 200 requests/15 minutes.
 - **Doctor/admin dashboard shows no data** — dashboard and analytics routes require the `authDoctor`/`authAdmin` token, not the patient (`authUser`) token — make sure the admin app is sending its own token, not a reused patient token.

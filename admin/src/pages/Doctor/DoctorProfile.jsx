@@ -16,7 +16,7 @@ const DoctorProfile = () => {
     setProfileData,
     getProfileData, backendUrl
   } = useContext(DoctorContext)
-  const { currency, } = useContext(AppContext)
+  const { currency } = useContext(AppContext)
   const [isEdit, setIsEdit] = useState(false)
   const [saving, setSaving] = useState(false)
 
@@ -38,7 +38,7 @@ const DoctorProfile = () => {
           available: profileData.available
         },
         {
-          headers: { Authorization: `Bearer ${dToken}` }
+          withCredentials: true
         }
       )
 
@@ -71,7 +71,7 @@ const DoctorProfile = () => {
       <div className='bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden'>
 
         {/* Banner */}
-        <div className='h-6 sm:h-12 bg-gradient-to-r from-[#5F6FFF] to-[#8B94FF] relative'>
+        <div className='h-6 sm:h-12 bg-linear-to-r from-primary to-teal-500 relative'>
           <div className='absolute inset-0 opacity-10'
             style={{ backgroundImage: 'radial-gradient(circle, white 1px, transparent 1px)', backgroundSize: '20px 20px' }}
           />
@@ -82,7 +82,7 @@ const DoctorProfile = () => {
           <div className='flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-5'>
             <div className='flex items-end gap-3 sm:gap-4 -mt-8 sm:-mt-10'>
               <img
-                className='w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-2xl object-cover border-4 border-white shadow-md ring-2 ring-[#eef0ff] flex-shrink-0'
+                className='w-20 h-20 sm:w-24 sm:h-24 md:w-28 md:h-28 rounded-2xl object-cover border-4 border-white shadow-md ring-2 ring-[#eef0ff] shrink-0'
                 src={profileData.image}
                 alt={profileData.name}
               />
@@ -184,7 +184,7 @@ const DoctorProfile = () => {
             <div>
               <p className='text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2'>Address Line 1</p>
               <div className='flex items-center gap-2'>
-                <span className='w-8 h-8 rounded-lg bg-[#eef0ff] flex items-center justify-center text-sm flex-shrink-0'><img className='bg-blue-300 rounded-sm' src={address} alt="" /></span>
+                <span className='w-8 h-8 rounded-lg bg-[#eef0ff] flex items-center justify-center text-sm shrink-0'><img className='bg-blue-300 rounded-sm' src={address} alt="" /></span>
                 {isEdit ? (
                   <input
                     type='text'
@@ -202,7 +202,7 @@ const DoctorProfile = () => {
             <div>
               <p className='text-xs font-semibold uppercase tracking-widest text-gray-400 mb-2'>Address Line 2</p>
               <div className='flex items-center gap-2'>
-                <span className='w-8 h-8 rounded-lg bg-[#eef0ff] flex items-center justify-center text-sm flex-shrink-0'><img className='bg-blue-300  rounded-sm' src={address} alt="" /></span>
+                <span className='w-8 h-8 rounded-lg bg-[#eef0ff] flex items-center justify-center text-sm shrink-0'><img className='bg-blue-300  rounded-sm' src={address} alt="" /></span>
                 {isEdit ? (
                   <input
                     type='text'

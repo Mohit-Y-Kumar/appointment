@@ -26,7 +26,7 @@ const RelatedDoctors = ({ speciality, docId }) => {
                 based on your selected speciality.
             </p>
 
-            <div className='w-full grid gap-4 gap-y-6 pt-5 px-3 sm:px-0 [grid-template-columns:repeat(auto-fit,minmax(200px,1fr))]'>
+            <div className='w-full grid gap-4 gap-y-6 pt-5 px-3 sm:px-0 grid-cols-[repeat(auto-fit,minmax(200px,1fr))]'>
                 {relDoc.slice(0, 5).map((item, index) => (
                     <DoctorCard key={index} item={item} />
                 ))}
@@ -34,7 +34,7 @@ const RelatedDoctors = ({ speciality, docId }) => {
 
             <button
                 onClick={() => { navigate('/doctors'); scrollTo(0, 0) }}
-                className='group flex items-center gap-2 bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white px-12 py-3 rounded-full mt-10'
+                className='group flex items-center gap-2 bg-linear-to-r from-primary via-sky-600 to-accent text-white px-12 py-3 rounded-full mt-10'
             >
                 <span>View more Doctors</span>
 

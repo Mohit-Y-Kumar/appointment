@@ -1,5 +1,7 @@
 import Groq from 'groq-sdk'
 
+const DEFAULT_GROQ_MODEL = process.env.GROQ_MODEL || 'llama-3.1-8b-instant'
+
 const getGroqClient = () => {
     if (!process.env.GROQ_API_KEY) {
         throw new Error('GROQ_API_KEY is not configured.')
@@ -72,17 +74,25 @@ const chat = async (req, res) => {
     try {
         const { message, conversationHistory } = req.body
 
-        if (!message || typeof message !== 'string' || !message.trim()) {
+        if (!message || typeof message !== 'string' || !message.trim() || message.length > 2000) {
             return res.status(400).json({ success: false, message: 'Message is required.' })
         }
 
+        const history = Array.isArray(conversationHistory)
+            ? conversationHistory
+                .filter(item => item && ['user', 'assistant'].includes(item.role) && typeof item.content === 'string')
+                .slice(-20)
+                .map(item => ({ role: item.role, content: item.content.trim().slice(0, 2000) }))
+            : []
+
         const groq = getGroqClient()
+        const modelName = process.env.GROQ_MODEL || DEFAULT_GROQ_MODEL
         const response = await groq.chat.completions.create({
-            model: 'llama-3.3-70b-versatile',
+            model: modelName,
             max_tokens: 1024,
             messages: [
                 { role: 'system', content: SYSTEM_PROMPT },
-                ...(Array.isArray(conversationHistory) ? conversationHistory : []),
+                ...history,
                 { role: 'user', content: message.trim() }
             ]
         })
@@ -91,12 +101,24 @@ const chat = async (req, res) => {
 
     } catch (error) {
         const is429 = error?.status === 429 || error?.error?.type === 'tokens'
+        const isModelAccessIssue = error?.status === 404 || error?.error?.code === 'model_not_found' || error?.error?.code === 'model_not_found'
+
         if (is429) {
             const msg = error?.error?.message || ''
             const seconds = msg.match(/try again in ([\d.]+)s/)?.[1]
             const wait = seconds ? `Please wait ${Math.ceil(seconds)} seconds and try again.` : 'Please wait a moment and try again.'
             return res.status(429).json({ success: false, message: `Rate limit reached. ${wait}` })
         }
+
+        if (isModelAccessIssue) {
+            const configuredModel = process.env.GROQ_MODEL || DEFAULT_GROQ_MODEL
+            console.error('[chat] Groq model unavailable:', configuredModel, error?.error || error?.message)
+            return res.status(502).json({
+                success: false,
+                message: `The configured AI model (${configuredModel}) is not available for this Groq account. Please update GROQ_MODEL in the backend environment.`
+            })
+        }
+
         console.error('[chat]', error.message)
         return res.status(500).json({ success: false, message: 'Internal server error.' })
     }

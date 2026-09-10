@@ -6,7 +6,7 @@ spec:
   selector:
     app: frontend
   ports:
-  - port: 3000
+  - name: http
+    port: 80
     targetPort: 80
-    nodePort: 30300
-  type: NodePort
+  type: ClusterIP

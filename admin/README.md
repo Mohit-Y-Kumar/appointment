@@ -1,16 +1,73 @@
-# React + Vite
+# DocNest Admin
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This app provides the admin and doctor management dashboard for DocNest. It is used for doctor onboarding, scheduling, appointment actions, revenue visibility, reviews, and platform analytics.
 
-Currently, two official plugins are available:
+## Features
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- admin login and JWT-based session handling
+- doctor management and profile creation
+- appointment dashboard and cancellation tools
+- doctor analytics for revenue, appointment count, and trends
+- doctor profile and availability controls
+- live chat support with patients
+- admin refund workflow
+- production-ready deployment via nginx + Docker
 
-## React Compiler
+## Local setup
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+1. Install dependencies
 
-## Expanding the ESLint configuration
+```bash
+cd admin
+npm install
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+2. Create the environment file
+
+```bash
+cp .env.example .env
+```
+
+Example:
+
+```env
+VITE_BACKEND_URL=http://localhost:4000
+```
+
+3. Start the dashboard
+
+```bash
+npm run dev
+```
+
+The app runs at http://localhost:5174 by default.
+
+## Production build
+
+```bash
+npm run build
+```
+
+This build is served by nginx in the Docker image.
+
+## Security and configuration notes
+
+- keep the backend URL aligned with the deployed API host
+- restrict backend origins to trusted frontends and admin domains
+- do not expose secret tokens in the frontend bundle
+- in production, the admin UI should be served behind HTTPS and a trusted ingress
+
+## Project layout
+
+```text
+admin/
+├── src/
+├── public/
+├── index.html
+├── package.json
+├── vite.config.js
+├── Dockerfile
+├── nginx.conf
+└── README.md
+```
+

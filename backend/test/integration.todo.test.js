@@ -1,0 +1,28 @@
+import test from 'node:test'
+
+// These scenarios require an isolated MongoDB fixture and mocked external services.
+// Keep them named here until the integration harness is provisioned.
+
+test.todo('successful user login returns access and refresh cookies')
+test.todo('successful doctor login returns access and refresh cookies')
+test.todo('successful admin login returns access and refresh cookies')
+test.todo('wrong password and invalid email are rejected')
+test.todo('refresh rotates the refresh token and issues a new access token')
+test.todo('reused refresh token revokes its token family')
+test.todo('expired refresh token is rejected')
+test.todo('successful logout revokes the refresh token for each role')
+test.todo('booking rejects an invalid doctor id')
+test.todo('booking rejects a duplicate appointment slot')
+test.todo('booking rejects an unavailable doctor')
+test.todo('unpaid appointment can be cancelled and releases its slot')
+test.todo('paid appointment cancellation is rejected')
+test.todo('paid appointment can be completed by its doctor')
+test.todo('unpaid appointment completion is rejected')
+test.todo('review is allowed only after a completed paid appointment')
+test.todo('chat room access is limited to its two appointment participants')
+test.todo('call room access is limited to its two appointment participants')
+test.todo('chat image upload validates file type and participant room')
+test.todo('payment signature validation accepts only a valid signature')
+test.todo('payment amount mismatch is rejected')
+test.todo('webhook signature validation rejects forged payloads')
+test.todo('auth and refresh rate limits return 429 after the configured threshold')

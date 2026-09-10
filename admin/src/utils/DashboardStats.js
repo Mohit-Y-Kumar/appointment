@@ -8,10 +8,12 @@ export const useDashboardStats = (appointments, doctors) => {
 
     const total     = appts.length
     const cancelled = appts.filter(a => a.cancelled).length
-    const completed = appts.filter(a => a.isCompleted).length
-    const paid      = appts.filter(a => a.payment && !a.cancelled).length
+    const completed = appts.filter(a => !a.cancelled && a.isCompleted).length
+    const paid      = appts.filter(a => !a.cancelled && a.payment && !a.isCompleted).length
     const pending   = appts.filter(a => !a.cancelled && !a.isCompleted && !a.payment).length
-    const revenue   = appts.filter(a => a.payment).reduce((s, a) => s + (a.amount || 0), 0)
+    const revenue   = appts
+      .filter(a => !a.cancelled && a.payment)
+      .reduce((s, a) => s + (a.amount || 0), 0)
 
     const now          = new Date()
     const todayDay     = now.getDate()
@@ -102,7 +104,7 @@ export const useDashboardStats = (appointments, doctors) => {
 
     // ── Daily revenue — current month ──
     const dailyMap = {}
-    appts.filter(a => a.payment).forEach(a => {
+    appts.filter(a => !a.cancelled && a.payment).forEach(a => {
       const s = parseSlot(a.slotDate)
       if (!s || s.mo !== currentMoStr || s.yr !== currentYrStr) return
       const day = parseInt(s.day, 10)
@@ -126,7 +128,7 @@ export const useDashboardStats = (appointments, doctors) => {
       const lbl     = d.toLocaleString('default', { month: 'short' })
       const monthRev = appts
         .filter(a => {
-          if (!a.payment) return false
+          if (a.cancelled || !a.payment) return false
           const s = parseSlot(a.slotDate)
           return s && s.mo === mo && s.yr === yr
         })

@@ -37,7 +37,7 @@ const Review = ({
       const { data } = await axios.post(
         backendUrl + "/api/reviews/rate",
         { doctorId, appointmentId, rating },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { withCredentials: true }
       );
 
       if (data.success) {
@@ -67,7 +67,7 @@ const Review = ({
       const { data } = await axios.post(
         backendUrl + `/api/reviews/comment/${reviewId}`,
         { comment: reviewText },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { withCredentials: true }
       );
 
       if (data.success) {
@@ -91,7 +91,7 @@ const Review = ({
       const { data } = await axios.put(
         backendUrl + `/api/reviews/edit/${currentReviewId}`,
         { rating: editRating, comment: editComment },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { withCredentials: true }
       );
       if (data.success) {
         toast.success("Review updated successfully!");
@@ -112,7 +112,7 @@ const Review = ({
     try {
       const { data } = await axios.delete(
         backendUrl + `/api/reviews/delete/${reviewId}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { withCredentials: true }
       );
       if (data.success) {
         toast.success("Review deleted successfully!")

@@ -1,20 +1,65 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
 @import "tailwindcss";
-@tailwind utilities;
 
 @theme {
-  --color-primary: #5f6FFF; 
+  --color-primary: #1d4ed8;
+  --color-accent: #14b8a6;
+  --color-brand-dark: #102a43;
+  --color-brand-soft: #eaf6ff;
 }
 
-::-webkit-scrollbar{
-  @apply hidden;
+:root {
+  color-scheme: light;
 }
 
-*{
+html {
+  scroll-behavior: smooth;
+  background:
+    radial-gradient(circle at top left, rgba(99, 102, 241, 0.12), transparent 25%),
+    radial-gradient(circle at top right, rgba(20, 184, 166, 0.12), transparent 22%),
+    #f5f8ff;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  color: #172033;
   font-family: 'Outfit', sans-serif;
+  background: transparent;
 }
 
-@media(max-width:740px){
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(148, 163, 184, 0.12);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, rgba(29, 78, 216, 0.7), rgba(20, 184, 166, 0.7));
+  border-radius: 999px;
+}
+
+@media (max-width:740px){
   .active p{
     @apply text-white bg-primary;
   }

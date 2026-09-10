@@ -7,7 +7,7 @@ import chaticon from '../../assets/chats_icon.svg'
 
 const DoctorAppointments = () => {
 
-  const { dToken, appointments, getAppointments, completeAppointment, cancelAppointment } = useContext(DoctorContext)
+  const { dToken, appointments, appointmentPagination, getAppointments, completeAppointment, cancelAppointment } = useContext(DoctorContext)
   const { calculateAge, slotDateFormat, currency } = useContext(AppContext)
 
   const [selectedPatient, setSelectedPatient] = useState(null)
@@ -45,8 +45,8 @@ const DoctorAppointments = () => {
       {/*  Page Title */}
       <div className='  flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3'>
         <div>
-          <h1 className='text-xl font-bold text-[#1A1F5E]'>All Appointments</h1>
-          <p className='text-xs text-gray-400 mt-0.5'>{appointments.length} total records</p>
+          <h1 className='text-xl font-bold text-brand-dark'>All Appointments</h1>
+          <p className='text-xs text-gray-400 mt-0.5'>{appointmentPagination.total} total records</p>
         </div>
 
         {/* Filter Tabs */}
@@ -103,7 +103,7 @@ const DoctorAppointments = () => {
               {/* Patient */}
               <div className='flex items-center gap-3'>
                 <img
-                  className='w-9 h-9 rounded-full object-cover ring-2 ring-[#eef0ff] flex-shrink-0'
+                  className='w-9 h-9 rounded-full object-cover ring-2 ring-indigo-50 shrink-0'
                   src={item.userData.image}
                   alt=''
                 />
@@ -115,7 +115,7 @@ const DoctorAppointments = () => {
 
               {/* Payment */}
               <div className='flex flex-wrap items-center gap-2 xl:contents'>
-                <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${item.payment ? 'bg-[#eef0ff] text-[#5F6FFF]' : 'bg-gray-100 text-gray-500'}`}>
+                <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${item.payment ? 'bg-indigo-50 text-primary' : 'bg-gray-100 text-gray-500'}`}>
                   {item.payment ? 'Online' : 'Cash'}
                 </span>
               </div>
@@ -131,7 +131,7 @@ const DoctorAppointments = () => {
               </p>
 
               {/* Fees */}
-              <p className='text-sm font-semibold text-[#1A1F5E]'>{currency}{item.amount}</p>
+              <p className='text-sm font-semibold text-brand-dark'>{currency}{item.amount}</p>
 
               {/* Action */}
               <div>
@@ -139,7 +139,9 @@ const DoctorAppointments = () => {
                   <span className='text-xs font-semibold px-3 py-1 rounded-full bg-red-50 text-red-500'>Cancelled</span>
                 ) : item.isCompleted ? (
                   <span className='text-xs font-semibold px-3 py-1 rounded-full bg-green-50 text-green-600'>Completed</span>
-                ) : (
+                ) : !item.payment ? (
+                  <div className='flex items-center gap-2'>
+                    <span className='text-xs font-semibold px-3 py-1 rounded-full bg-amber-50 text-amber-600'>Awaiting payment</span>
                   <div className='flex gap-2'>
                     <button
                       onClick={() => cancelAppointment(item._id)}
@@ -148,14 +150,16 @@ const DoctorAppointments = () => {
                     >
                       <img className='w-4 h-4' src={assets.cancel_icon} alt='cancel' />
                     </button>
-                    <button
-                      onClick={() => completeAppointment(item._id)}
-                      className='w-8 h-8 rounded-full bg-green-50 hover:bg-green-100 flex items-center justify-center transition'
-                      title='Complete'
-                    >
-                      <img className='w-4 h-4' src={assets.tick_icon} alt='complete' />
-                    </button>
                   </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => completeAppointment(item._id)}
+                    className='w-8 h-8 rounded-full bg-green-50 hover:bg-green-100 flex items-center justify-center transition'
+                    title='Complete'
+                  >
+                    <img className='w-4 h-4' src={assets.tick_icon} alt='complete' />
+                  </button>
                 )}
               </div>
 
@@ -170,12 +174,19 @@ const DoctorAppointments = () => {
                   })
                   setShowChat(true)
                 }}
-                className='flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-[#eef0ff] text-[#5F6FFF] hover:bg-[#5F6FFF] hover:text-white transition-all'
+                className='flex items-center gap-1.5 text-xs font-semibold px-3 py-1.5 rounded-full bg-indigo-50 text-primary hover:bg-primary hover:text-white transition-all'
               >
                 <img src={chaticon} alt="chat" className="w-4 h-4 text-blue-400S" /> Chat
               </button>
             </div>
           ))}
+        </div>
+        <div className='flex items-center justify-between border-t border-gray-100 px-4 sm:px-6 py-3 text-xs text-gray-500'>
+          <span>Page {appointmentPagination.page} of {appointmentPagination.pages}</span>
+          <div className='flex gap-2'>
+            <button disabled={appointmentPagination.page <= 1} onClick={() => getAppointments(appointmentPagination.page - 1)} className='rounded border px-3 py-1 disabled:opacity-40'>Previous</button>
+            <button disabled={appointmentPagination.page >= appointmentPagination.pages} onClick={() => getAppointments(appointmentPagination.page + 1)} className='rounded border px-3 py-1 disabled:opacity-40'>Next</button>
+          </div>
         </div>
       </div>
 

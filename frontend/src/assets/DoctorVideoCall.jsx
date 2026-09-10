@@ -1,9 +1,8 @@
-import React, { useEffect, useState, useRef, useContext } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 
 import Peer from 'simple-peer'
-import { DoctorContext } from '../../context/DoctorContext'
 
-import { assets } from '../../assets/assets'
+import { assets } from './assets'
 
 
 
@@ -12,7 +11,6 @@ const DoctorVideoCall = ({
     roomId,
     incomingCall,
     callType = 'video',
-    isInitiator = false,
     callerId,
     callerModel,
     receiverId,
@@ -23,8 +21,6 @@ const DoctorVideoCall = ({
     receiverImage = '',
     onClose
 }) => {
-    const { profileData } = useContext(DoctorContext)
-
     const [localStream, setLocalStream] = useState(null)
     const [remoteStream, setRemoteStream] = useState(null)
     const [isMuted, setIsMuted] = useState(false)
@@ -44,7 +40,7 @@ const DoctorVideoCall = ({
         const socket = socketRef.current
         if (!socket) return
 
-        // ✅ Socket useEffect mein ye update karo
+        
         const onCallAccepted = () => {
             setCallStatus('accepted')
             if (peerRef.current) {
@@ -53,10 +49,10 @@ const DoctorVideoCall = ({
             }
 
             if (!streamRef.current) return
-            // ✅ Doctor initiator hai — peer banao
+           
             try {
                 const peer = new Peer({
-                    initiator: true,   // ✅ doctor caller hai
+                    initiator: true,   
                     trickle: false,
                     stream: streamRef.current
                 })
@@ -100,11 +96,11 @@ const DoctorVideoCall = ({
                     if (!peerRef.current.destroyed) {
                         peerRef.current.signal(signalData)
                     }
-                } catch (err) {
-                    console.warn('Signal ignored:', err.message)
+                    } catch (error) {
+                        console.warn('Signal ignored:', error.message)
                 }
             } else {
-                // ✅ Queue signal if peer not ready yet
+                
                 pendingSignalsRef.current.push(signalData)
             }
         }
@@ -124,7 +120,7 @@ const DoctorVideoCall = ({
 
 
 
-    // ✅ Local video
+    
     useEffect(() => {
         const startLocalStream = async () => {
             try {
@@ -136,13 +132,13 @@ const DoctorVideoCall = ({
                 let stream;
 
                 try {
-                    // ✅ Pehle video + audio try karo
+                   
                     stream = await navigator.mediaDevices.getUserMedia({
                         video: callType === 'video',
                         audio: true
                     })
-                } catch (err) {
-                    // ✅ Camera busy — sirf audio try karo
+                } catch {
+                    
                     console.warn('Camera busy — audio only')
                     stream = await navigator.mediaDevices.getUserMedia({
                         video: false,
@@ -237,7 +233,7 @@ const DoctorVideoCall = ({
         setCallStatus('ringing')
 
         socketRef.current.emit('join-room', roomId)
-        socketRef.current.emit('call-user', {  // ✅ call-user — incoming-call nahi
+        socketRef.current.emit('call-user', {  
             roomId,
             callerId,
             callerModel,
@@ -271,7 +267,7 @@ const DoctorVideoCall = ({
             const peer = new Peer({
                 initiator: false,
                 trickle: false,
-                stream: streamRef.current  // ✅ ref use karo
+                stream: streamRef.current  
             })
 
             peer.on('signal', (signalData) => {
@@ -384,7 +380,7 @@ const DoctorVideoCall = ({
             </div>
 
             {/* Controls */}
-            <div className='bg-black/80 py-4 sm:py-6 flex items-center justify-center gap-3 sm:gap-6 flex-shrink-0 pb-[calc(env(safe-area-inset-bottom,0px)+16px)]'>
+            <div className='bg-black/80 py-4 sm:py-6 flex items-center justify-center gap-3 sm:gap-6 shrink-0 pb-[calc(env(safe-area-inset-bottom,0px)+16px)]'>
                 <button
                     onClick={toggleMute}
                     className={`w-14 h-14 rounded-full flex items-center justify-center ${isMuted ? 'bg-red-500' : 'bg-gray-600'
@@ -430,7 +426,7 @@ const DoctorVideoCall = ({
             {/* Incoming Call Popup */}
             {incomingCallState && callStatus !== 'accepted' && (
                 <div className='fixed inset-0 bg-black/70 z-50 flex items-center justify-center px-4'>
-                    <div className='bg-white rounded-2xl p-5 sm:p-6 w-full max-w-[280px] sm:max-w-xs flex flex-col items-center gap-3 sm:gap-4'>
+                    <div className='bg-white rounded-2xl p-5 sm:p-6 w-full max-w-70 sm:max-w-xs flex flex-col items-center gap-3 sm:gap-4'>
                         {incomingCallState?.callerImage
                             ? <img src={incomingCallState.callerImage} className='w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover' />
                             : <div className='w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gray-300 flex items-center justify-center text-2xl sm:text-3xl'>👤</div>

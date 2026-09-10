@@ -1,26 +1,57 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
 @import "tailwindcss";
 
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
-
 @theme {
-  --color-primary: #5F6FFF;
-  --color-brand-dark: #1A1F5E;
-  --color-brand-pink: #FF6B8A;
+  --color-primary: #1d4ed8;
+  --color-accent: #14b8a6;
+  --color-brand-dark: #102a43;
+  --color-brand-pink: #14b8a6;
 }
+
+:root {
+  color-scheme: light;
+  font-family: 'Outfit', sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+  background: #f8fafc;
+  color: #172033;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100%;
+  width: 100%;
+}
+
+body {
+  background:
+    radial-gradient(circle at top left, rgba(99, 102, 241, 0.08), transparent 30%),
+    radial-gradient(circle at bottom right, rgba(20, 184, 166, 0.08), transparent 25%),
+    #f8fafc;
+  color: #172033;
+}
+
 ::-webkit-scrollbar {
-  width: 5px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #083ef0;
+  background: linear-gradient(180deg, #818cf8 0%, #3b82f6 100%);
   border-radius: 999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: hsl(229, 100%, 69%);
-}
-
-
-body {
-  font-family: 'Outfit', sans-serif;
+  background: linear-gradient(180deg, #6366f1 0%, #2563eb 100%);
 }

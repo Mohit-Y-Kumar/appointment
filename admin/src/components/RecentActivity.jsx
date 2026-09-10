@@ -27,7 +27,7 @@ const RecentActivity = ({ dashData, doctors }) => {
               <p className='text-xs text-slate-400'>Latest bookings across platform</p>
             </div>
             <button onClick={() => navigate('/all-appointments')}
-              className='text-xs text-indigo-600 hover:text-indigo-800 font-medium'>View all →</button>
+              className='text-xs text-primary hover:text-blue-700 font-medium'>View all →</button>
           </div>
           <table className='w-full text-xs'>
             <thead>
@@ -45,14 +45,14 @@ const RecentActivity = ({ dashData, doctors }) => {
                   <tr key={i} className='border-b border-slate-50 hover:bg-slate-50'>
                     <td className='py-2 pr-2'>
                       <div className='flex items-center gap-2'>
-                        <div className='w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-semibold flex-shrink-0'
+                        <div className='w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-semibold shrink-0'
                           style={{ background: bgs[i % 5], color: txs[i % 5] }}>{initials}</div>
-                        <span className='text-slate-700 font-medium truncate max-w-[70px]'>
+                        <span className='text-slate-700 font-medium truncate max-w-17.5'>
                           {(item.userData?.name || 'Patient').split(' ')[0]}
                         </span>
                       </div>
                     </td>
-                    <td className='py-2 pr-2 text-slate-500 truncate max-w-[80px]'>{item.docData?.name}</td>
+                    <td className='py-2 pr-2 text-slate-500 truncate max-w-20'>{item.docData?.name}</td>
                     <td className='py-2 pr-2 text-slate-400 whitespace-nowrap'>{slotDateFormat(item.slotDate)}</td>
                     <td className='py-2 pr-2'>
                       {item.cancelled
@@ -87,7 +87,7 @@ const RecentActivity = ({ dashData, doctors }) => {
               <p className='text-xs text-slate-400'>Registered doctors at a glance</p>
             </div>
             <button onClick={() => navigate('/doctor-list')}
-              className='text-xs text-indigo-600 hover:text-indigo-800 font-medium'>View all →</button>
+              className='text-xs text-primary hover:text-blue-700 font-medium'>View all →</button>
           </div>
           <table className='w-full text-xs'>
             <thead>
@@ -102,13 +102,13 @@ const RecentActivity = ({ dashData, doctors }) => {
                 <tr key={i} className='border-b border-slate-50 hover:bg-slate-50'>
                   <td className='py-2 pr-2'>
                     <div className='flex items-center gap-2'>
-                      <img src={doc.image} alt='' className='w-6 h-6 rounded-full object-cover flex-shrink-0' />
-                      <span className='text-slate-700 font-medium truncate max-w-[70px]'>
+                      <img src={doc.image} alt='' className='w-6 h-6 rounded-full object-cover shrink-0' />
+                      <span className='text-slate-700 font-medium truncate max-w-17.5'>
                         {doc.name.replace('Dr. ', '')}
                       </span>
                     </div>
                   </td>
-                  <td className='py-2 pr-2 text-slate-500 truncate max-w-[80px]'>{doc.speciality}</td>
+                  <td className='py-2 pr-2 text-slate-500 truncate max-w-17.5'>{doc.speciality}</td>
                   <td className='py-2 pr-2 text-amber-600 font-medium'>
                     {doc.averageRating > 0 ? (
                       <div className='flex items-center gap-1'>

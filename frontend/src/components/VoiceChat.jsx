@@ -1,4 +1,4 @@
-import React, { useState, useRef, useContext } from 'react'
+import React, { useState, useRef } from 'react'
 import { AppContext } from '../context/AppContext'
 import { assets } from '../assets/assets'
 
@@ -129,7 +129,7 @@ const VoiceChat = ({ onTranscript, onSpeak }) => {
                 />
             </button>
 
-            {/* 🔊 Speaker Button — AI reply band karo */}
+            {/* 🔊 Speaker Button — AI reply */}
             {isSpeaking && (
                 <button
                     onClick={stopSpeaking}

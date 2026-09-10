@@ -1,6 +1,5 @@
-import React, { useEffect, useState, useRef, useContext } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import Peer from 'simple-peer'
-import { DoctorContext } from '../../context/DoctorContext'
 import { assets } from '../../assets/assets'
 import { toast } from 'react-toastify'
 
@@ -21,8 +20,6 @@ const DoctorVideoCall = ({
     receiverImage = '',
     onClose
 }) => {
-    const { profileData } = useContext(DoctorContext)
-
     const [localStream, setLocalStream] = useState(null)
     const [remoteStream, setRemoteStream] = useState(null)
     const [isMuted, setIsMuted] = useState(false)

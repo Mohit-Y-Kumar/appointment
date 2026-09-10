@@ -1,0 +1,59 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-metrics
+  labels:
+    app: backend
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "4000"
+    prometheus.io/path: "/metrics"
+spec:
+  selector:
+    app: backend
+  ports:
+    - name: metrics
+      port: 4000
+      targetPort: 4000
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: docnest-backend-monitor
+  labels:
+    release: prometheus
+spec:
+  selector:
+    matchLabels:
+      app: backend
+  endpoints:
+    - port: metrics
+      path: /metrics
+      interval: 30s
+---
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: docnest-alerts
+  labels:
+    release: prometheus
+spec:
+  groups:
+    - name: docnest.rules
+      rules:
+        - alert: DocNestBackendDown
+          expr: up{job="docnest-backend"} == 0
+          for: 2m
+          labels:
+            severity: critical
+          annotations:
+            summary: DocNest backend is down
+            description: The backend service is unavailable for more than 2 minutes.
+        - alert: DocNestDatabaseNotReady
+          expr: probe_success{job="docnest-backend"} == 0
+          for: 5m
+          labels:
+            severity: warning
+          annotations:
+            summary: MongoDB dependency not ready
+            description: The application is not ready because the database dependency is down.

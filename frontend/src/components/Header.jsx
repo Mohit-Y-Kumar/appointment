@@ -1,37 +1,65 @@
 import React from 'react'
-import { assets } from '../assets/assets'
+import { assets, heroDoctorImages } from '../assets/assets'
 
 const Header = () => {
     return (
-        <div className='flex flex-col md:flex-row bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-xl px-4 md:px-8 lg:px-8 overflow-hidden'>
+        <div className='relative overflow-hidden rounded-[28px] border border-sky-100 bg-gradient-to-br from-[#102a43] via-[#1d4ed8] to-[#14b8a6] px-4 py-6 shadow-[0_30px_60px_rgba(29,78,216,0.18)] md:px-8 lg:px-10'>
+            <div className='absolute -left-16 top-12 h-52 w-52 rounded-full bg-white/10 blur-3xl' />
+            <div className='absolute right-0 top-0 h-60 w-60 rounded-full bg-cyan-300/20 blur-3xl' />
 
-            {/* Left */}
-            <div className='md:w-1/2 flex flex-col items-start justify-center gap-4 py-10 md:py-[8vw] md:pb-16'>
-                <p className='text-3xl md:text-4xl lg:text-5xl text-white font-bold leading-tight'>
-                    Find & Book Trusted Doctors Instantly
-                </p>
-                <p className='text-white/80 text-sm sm:text-base'>
-                    Your Health, Our Priority — Book with Confidence
-                </p>
-                <p className='text-white/70 text-sm leading-relaxed'>
-                    Explore verified doctors, compare profiles, and book appointments in just a few clicks.
-                </p>
-                <a
-                    href='#speciality'
-                    className='flex items-center gap-2 bg-white px-8 py-3 rounded-full text-gray-700 text-sm font-medium hover:scale-105 transition-all duration-300 shadow-md mt-2'
-                >
-                    Book Now
-                    <img className='w-3' src={assets.arrow_icon} alt='arrow' />
-                </a>
-            </div>
+            <div className='relative flex flex-col gap-8 md:flex-row md:items-center'>
+                <div className='md:w-1/2 lg:pr-6'>
+                    <span className='mb-4 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-medium text-sky-50 ring-1 ring-white/20 backdrop-blur-sm'>
+                        Trusted healthcare, simplified
+                    </span>
+                    <p className='text-3xl font-bold leading-[1.08] text-white md:text-4xl lg:text-5xl'>
+                        Find & Book Trusted Doctors Instantly
+                    </p>
+                    <p className='mt-4 max-w-lg text-sm font-medium text-sky-50/90 sm:text-base'>
+                        Your Health, Our Priority — Book with Confidence
+                    </p>
+                    <p className='mt-3 max-w-xl text-sm leading-relaxed text-sky-100/80'>
+                        Explore verified doctors, compare specialties, and secure appointments in just a few clicks.
+                    </p>
+                    <div className='mt-6 flex flex-wrap items-center gap-3'>
+                        <a
+                            href='#speciality'
+                            className='flex items-center gap-2 rounded-full bg-white px-6 py-3 text-sm font-semibold text-slate-800 shadow-[0_14px_30px_rgba(255,255,255,0.25)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_18px_35px_rgba(255,255,255,0.35)]'
+                        >
+                            Book Now
+                            <img className='w-3' src={assets.arrow_icon} alt='arrow' />
+                        </a>
+                        <div className='flex items-center gap-2 rounded-full bg-white/8 px-3 py-2 text-xs text-sky-50 ring-1 ring-white/20 backdrop-blur-sm'>
+                            <span className='inline-flex h-2.5 w-2.5 rounded-full bg-emerald-400' />
+                            100+ verified doctors
+                        </div>
+                    </div>
+                </div>
 
-            {/* Right */}
-            <div className='md:w-1/2 flex items-end justify-center md:justify-end relative min-h-[280px] md:min-h-0'>
-                <img
-                    className='w-full max-w-sm md:max-w-none md:absolute md:bottom-0 md:scale-y-130 md:scale-x-110 md:origin-bottom h-auto rounded-lg object-contain'
-                    src={assets.header_img}
-                    alt="Doctor illustration"
-                />
+                <div className='relative flex min-h-[300px] items-end justify-center md:w-1/2 md:min-h-[460px]'>
+                    <div className='relative h-[320px] w-full max-w-[620px] md:h-[470px]'>
+                        {heroDoctorImages.map((image, index) => (
+                            <img
+                                key={image}
+                                className='absolute bottom-0 h-full object-contain object-bottom drop-shadow-[0_35px_60px_rgba(15,23,42,0.28)] transition-transform duration-300 hover:scale-[1.04]'
+                                src={image}
+                                alt={index === 0 ? 'Doctor illustration' : ''}
+                                aria-hidden={index !== 0}
+                                data-testid='hero-doctor'
+                                loading={index === 0 ? 'eager' : 'lazy'}
+                                decoding='async'
+                                style={{
+                                    left: `${index * 12}%`,
+                                    width: '62%',
+                                    transform: index === 0 ? 'scale(1.22)' : 'scale(1.1)',
+                                    zIndex: index + 1,
+                                }}
+                            />
+                        ))}
+
+                        
+                    </div>
+                </div>
             </div>
         </div>
     )

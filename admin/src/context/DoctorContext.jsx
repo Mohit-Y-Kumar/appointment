@@ -1,6 +1,23 @@
 import axios from 'axios'
-import React, { createContext, useState } from 'react'
+import React, { createContext, useEffect, useState } from 'react'
 import { toast } from 'react-toastify'
+import { getCsrfToken } from '../utils/csrfToken.js'
+import { clearActiveRole, getActiveRole, refreshSession } from '../utils/authRefresh.js'
+
+axios.defaults.withCredentials = true
+
+const ensureCsrfToken = async () => {
+  const token = getCsrfToken()
+  if (token) return token
+
+  try {
+    await axios.get(`${import.meta.env.VITE_BACKEND_URL}/health`, { withCredentials: true })
+  } catch {
+    // no-op: safe endpoint used to establish the CSRF cookie state
+  }
+
+  return getCsrfToken()
+}
 
 export const DoctorContext = createContext()
 
@@ -8,24 +25,61 @@ const DoctorContextProvider = (props) => {
 
   const backendUrl = import.meta.env.VITE_BACKEND_URL
 
-  const [dToken, setDToken]       = useState(localStorage.getItem('dToken') ?? '')
+  const [dToken, setDToken]       = useState(false)
+  const [authReady, setAuthReady] = useState(false)
   const [appointments, setAppointments] = useState([])
+  const [appointmentPagination, setAppointmentPagination] = useState({ page: 1, pages: 1, total: 0, limit: 10 })
   const [dashData, setDashData]   = useState(false)
   const [profileData, setProfileData] = useState(false)
 
+  useEffect(() => {
+    let isMounted = true
+    if (getActiveRole() !== 'doctor') {
+      setAuthReady(true)
+      return () => {
+        isMounted = false
+      }
+    }
+    setAuthReady(false)
+    refreshSession(backendUrl, 'doctor')
+      .then(() => {
+        if (!isMounted) return
+        setDToken(true)
+        setAuthReady(true)
+      })
+      .catch((error) => {
+        if (!isMounted) return
+        setAuthReady(true)
+        
+        // Log refresh errors for debugging
+        if (error.response?.status === 401) {
+          console.warn('[DoctorContext] Refresh token validation failed (401). This may indicate stale cookies. Clear browser cookies if login issues persist.')
+          console.error('[DoctorContext] Refresh error:', error.response?.data?.message)
+        }
+        
+        clearActiveRole()
+        setDToken(false)
+      })
+
+    return () => {
+      isMounted = false
+    }
+  }, [backendUrl])
+
   // ── Auth header — matches your existing pattern ───────────────────────────
-  const authHeader = () => ({ headers: { Authorization: `Bearer ${dToken}` } })
+  const authHeader = () => ({ withCredentials: true })
 
   // ── EXISTING: get all appointments ────────────────────────────────────────
-  const getAppointments = async () => {
+  const getAppointments = async (page = 1) => {
     try {
       if (!dToken) return
       const { data } = await axios.get(
-        backendUrl + '/api/doctor/appointments',
+        backendUrl + `/api/doctor/appointments?page=${page}&limit=10`,
         authHeader()
       )
       if (data.success) {
         setAppointments(data.appointments?.slice().reverse())
+        setAppointmentPagination(data.pagination || { page, pages: 1, total: data.appointments.length, limit: 10 })
       } else {
         toast.error(data.message)
       }
@@ -37,6 +91,7 @@ const DoctorContextProvider = (props) => {
   // ── EXISTING: complete appointment ────────────────────────────────────────
   const completeAppointment = async (appointmentId) => {
     try {
+      await ensureCsrfToken()
       const { data } = await axios.post(
         backendUrl + '/api/doctor/complete-appointment',
         { appointmentId },
@@ -56,6 +111,7 @@ const DoctorContextProvider = (props) => {
   // ── EXISTING: cancel appointment ──────────────────────────────────────────
   const cancelAppointment = async (appointmentId) => {
     try {
+      await ensureCsrfToken()
       const { data } = await axios.post(
         backendUrl + '/api/doctor/cancel-appointment',
         { appointmentId },
@@ -179,8 +235,9 @@ const DoctorContextProvider = (props) => {
 
   const value = {
     dToken, setDToken,
+    authReady,
     backendUrl,
-    appointments, setAppointments,
+    appointments, setAppointments, appointmentPagination,
     dashData, setDashData,
     profileData, setProfileData,
     getAppointments,

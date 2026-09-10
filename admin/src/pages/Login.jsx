@@ -3,6 +3,8 @@ import { AdminContext } from '../context/AdminContext'
 import axios from 'axios'
 import { toast } from 'react-toastify'
 import { DoctorContext } from '../context/DoctorContext'
+import { getCsrfToken } from '../utils/csrfToken.js'
+import { setActiveRole } from '../utils/authRefresh.js'
 
 const Login = () => {
 
@@ -17,23 +19,26 @@ const Login = () => {
         event.preventDefault()
 
         try {
+            if (!getCsrfToken()) {
+                await axios.get(backendUrl + '/health', { withCredentials: true })
+            }
+
             if (state === 'Admin') {
-                const { data } = await axios.post(backendUrl + '/api/admin/login', { email, password })
+                const { data } = await axios.post(backendUrl + '/api/admin/login', { email, password }, { withCredentials: true })
                 if (data.success) {
-                    localStorage.setItem('aToken', data.token)
-                    setAToken(data.token);
+                    setActiveRole('admin')
+                    setAToken(true);
                 } else {
                     toast.error(data.message);
                 }
 
             } else {
 
-                const { data } = await axios.post(backendUrl + '/api/doctor/login', { email, password })
+                const { data } = await axios.post(backendUrl + '/api/doctor/login', { email, password }, { withCredentials: true })
 
                 if (data.success) {
-                    localStorage.setItem('dToken', data.token)
-                    setDToken(data.token);
-                    console.log(data.token);
+                    setActiveRole('doctor')
+                    setDToken(true);
                 } else {
                     toast.error(data.message);
                 }
@@ -47,24 +52,24 @@ const Login = () => {
     }
 
     return (
-        <form onSubmit={onSubmitHandler} className='min-h-[80vh] flex items-center px-4'>
-            <div className='flex flex-col gap-3 m-auto items-start p-8 min-w-[340px] sm:min-w-96 border rounded-xl text-sm shadow-lg'>
-                <p className='text-xl sm:text-2xl font-semibold m-auto'>
+        <form onSubmit={onSubmitHandler} className='flex min-h-screen w-full items-center justify-center bg-slate-50 px-4 py-8'>
+            <div className='w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 text-sm shadow-xl shadow-slate-200/60 sm:p-8'>
+                <p className='text-center text-xl font-semibold text-slate-800 sm:text-2xl'>
                     <span className='text-primary'> {state} </span> Login
                 </p>
-                <div className='w-full'>
-                    <p>Email</p>
-                    <input onChange={(e) => setEmail(e.target.value)} value={email} className='border border-[#DADADA] rounded w-full p-2 mt-1' type="email" required />
+                <div className='mt-6 w-full'>
+                    <label className='mb-1.5 block font-medium text-slate-600' htmlFor='login-email'>Email</label>
+                    <input id='login-email' onChange={(e) => setEmail(e.target.value)} value={email} className='w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 outline-none transition focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/10' type='email' required />
                 </div>
-                <div className='w-full'>
-                    <p >Password</p>
-                    <input onChange={(e) => setPassword(e.target.value)} value={password} className='border border-[#DADADA] rounded w-full p-2 mt-1' type="password" required />
+                <div className='mt-4 w-full'>
+                    <label className='mb-1.5 block font-medium text-slate-600' htmlFor='login-password'>Password</label>
+                    <input id='login-password' onChange={(e) => setPassword(e.target.value)} value={password} className='w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 outline-none transition focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/10' type='password' required />
                 </div>
-                <button className='bg-primary text-white w-full py-2 rounded-md text-base'>Login</button>
+                <button className='mt-6 w-full rounded-xl bg-primary py-3 text-base font-semibold text-white shadow-md shadow-primary/20 transition hover:-translate-y-0.5 hover:bg-primary/90'>Login</button>
                 {
                     state === 'Admin'
-                        ? <p>Doctor Login? <span className='text-primary underline cursor-pointer' onClick={() => setState('Doctor')}>Click here</span></p>
-                        : <p>Admin Login? <span className='text-primary underline cursor-pointer' onClick={() => setState('Admin')}>Click here</span></p>
+                        ? <p className='mt-5 text-center text-slate-500'>Doctor Login? <button type='button' className='font-semibold text-primary underline underline-offset-2' onClick={() => setState('Doctor')}>Click here</button></p>
+                        : <p className='mt-5 text-center text-slate-500'>Admin Login? <button type='button' className='font-semibold text-primary underline underline-offset-2' onClick={() => setState('Admin')}>Click here</button></p>
                 }
 
             </div>

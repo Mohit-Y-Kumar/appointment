@@ -4,7 +4,7 @@ import { toast } from 'react-toastify'
 import axios from 'axios'
 
 const MyProfile = () => {
-  const { userData, setUserData, token, backendUrl, loadUserProfileData } = useContext(AppContext)
+  const { userData, setUserData, backendUrl, loadUserProfileData } = useContext(AppContext)
 
   const [isEdit, setIsEdit] = useState(false)
   const [image, setImage] = useState(null)
@@ -34,7 +34,7 @@ const MyProfile = () => {
       const { data } = await axios.post(
         backendUrl + '/api/user/update-profile',
         formData,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { withCredentials: true }
       )
 
       if (data.success) {
@@ -59,7 +59,7 @@ const MyProfile = () => {
   )
 
   return (
-    <div className='px-4 sm:px-6 py-8 max-w-2xl mx-auto'>
+    <div className='mx-auto w-full max-w-2xl px-4 py-6 sm:px-6 sm:py-8'>
       <div className='bg-white shadow-xl rounded-2xl p-6 sm:p-10'>
 
         {/* HEADER */}

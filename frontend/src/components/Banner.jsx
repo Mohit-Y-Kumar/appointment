@@ -6,28 +6,25 @@ const Banner = () => {
     const navigate = useNavigate()
 
     return (
-        <div className='flex flex-col md:flex-row bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl px-6 sm:px-10 md:px-14 lg:px-12 my-20 overflow-hidden'>
-
-           
-            <div className='flex-1 py-10 sm:py-12 md:py-16 lg:py-24 lg:pl-5 flex flex-col gap-4'>
-                <p className='text-2xl sm:text-3xl md:text-4xl font-bold text-white leading-tight'>
+        <div className='my-20 flex flex-col overflow-hidden rounded-[30px] border border-sky-100 bg-gradient-to-br from-[#102a43] via-[#1d4ed8] to-[#14b8a6] px-6 sm:px-10 md:flex-row md:px-12 lg:px-14'>
+            <div className='flex flex-1 flex-col justify-center gap-4 py-10 sm:py-12 md:py-16 lg:py-20'>
+                <p className='text-2xl font-bold leading-tight text-white sm:text-3xl md:text-4xl'>
                     Book Appointments Instantly
                 </p>
-                <p className='text-white/80 text-sm sm:text-base max-w-sm'>
+                <p className='max-w-md text-sm text-sky-50/80 sm:text-base'>
                     Connect with 100+ verified doctors and get the care you need — anytime, anywhere.
                 </p>
                 <button
                     onClick={() => { navigate('/login'); window.scrollTo(0, 0) }}
-                    className='self-start bg-white text-sm sm:text-base text-gray-700 px-6 sm:px-8 py-2.5 sm:py-3 rounded-full mt-2 hover:scale-105 transition-all duration-300 shadow-md font-medium'
+                    className='mt-2 inline-flex w-fit items-center justify-center rounded-full bg-white px-6 py-3 text-sm font-semibold text-slate-800 shadow-[0_18px_35px_rgba(15,23,42,0.16)] transition-all duration-300 hover:-translate-y-0.5 sm:text-base'
                 >
                     Get Started →
                 </button>
             </div>
 
-          
-            <div className='hidden md:flex md:w-1/2 items-end justify-end relative h-[300px] lg:h-[380px]'>
+            <div className='relative hidden items-end justify-end overflow-hidden pb-4 md:flex md:w-1/2'>
                 <img
-                    className='absolute bottom-0 right-0 w-[130%] lg:w-[160%] object-contain drop-shadow-2xl'
+                    className='h-auto w-full max-w-[420px] object-contain object-bottom drop-shadow-[0_30px_45px_rgba(15,23,42,0.22)]'
                     src={assets.appointment_img}
                     alt="Book appointment illustration"
                 />
