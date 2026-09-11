@@ -7,6 +7,14 @@ const hasOAuthCredentials = Boolean(
     process.env.GOOGLE_REFRESH_TOKEN
 )
 
+const baseTimeouts = {
+    pool: true,
+    maxConnections: 5,
+    connectionTimeout: 15000,
+    greetingTimeout: 15000,
+    socketTimeout: 20000
+}
+
 const gmailOAuthConfig = {
     type: 'OAuth2',
     user: gmailUser,
@@ -24,11 +32,11 @@ const gmailSmtpConfig = {
 }
 
 const oauthTransport = hasOAuthCredentials
-    ? nodemailer.createTransport({ service: 'gmail', auth: gmailOAuthConfig })
+    ? nodemailer.createTransport({ service: 'gmail', auth: gmailOAuthConfig, ...baseTimeouts })
     : null
 
 const smtpTransport = process.env.EMAIL_USER && process.env.EMAIL_PASS
-    ? nodemailer.createTransport({ service: 'gmail', auth: gmailSmtpConfig.auth })
+    ? nodemailer.createTransport({ service: 'gmail', auth: gmailSmtpConfig.auth, ...baseTimeouts })
     : null
 
 export const sendMail = async ({ to, subject, html }) => {
@@ -52,12 +60,16 @@ export const sendMail = async ({ to, subject, html }) => {
 
     for (const attempt of attempts) {
         try {
+            await attempt.transport.verify()
             await attempt.transport.sendMail(mailOptions)
             console.log(`[Mailer] Email sent via ${attempt.label} to ${to}`)
             return true
         } catch (error) {
             lastError = error
-            console.error(`[Mailer] ${attempt.label} send failed:`, error.message)
+            console.error(`[Mailer] ${attempt.label} send failed: ${error.message}`)
+            if (error.code === 'EAUTH' || /invalid_grant|oauth|authentication/i.test(error.message)) {
+                console.error('[Mailer] Gmail OAuth credentials appear invalid or expired. Generate a fresh Google refresh token for the same Gmail account.')
+            }
         }
     }
 
@@ -65,4 +77,4 @@ export const sendMail = async ({ to, subject, html }) => {
     return false
 }
 
-export default oauthTransport || smtpTransport || nodemailer.createTransport({ service: 'gmail' })
+export default oauthTransport || smtpTransport || nodemailer.createTransport({ service: 'gmail', ...baseTimeouts })
