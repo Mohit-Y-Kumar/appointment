@@ -4,7 +4,8 @@ const gmailUser = process.env.GOOGLE_USER || process.env.EMAIL_USER
 const hasOAuthCredentials = Boolean(
     process.env.GOOGLE_CLIENT_ID &&
     process.env.GOOGLE_CLIENT_SECRET &&
-    process.env.GOOGLE_REFRESH_TOKEN
+    process.env.GOOGLE_REFRESH_TOKEN &&
+    gmailUser
 )
 
 const baseTimeouts = {

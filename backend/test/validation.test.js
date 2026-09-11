@@ -1,6 +1,33 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
+import { validateEnv } from '../config/env.js'
 import { isValidAppointmentDate, isValidFee, isValidSlotTime, parseAppointmentDateTime } from '../utils/validation.js'
+
+test('accepts Gmail OAuth credentials without SMTP email/password', () => {
+    const previousEnv = { ...process.env }
+
+    try {
+        process.env.NODE_ENV = 'development'
+        process.env.JWT_SECRET = 'abcdefghijklmnopqrstuvwxyz123456'
+        process.env.MONGO_URI = 'mongodb://localhost:27017/docnest-test'
+        process.env.ADMIN_EMAIL = 'admin@example.com'
+        process.env.ADMIN_PASSWORD_HASH = '$2b$10$testhashforvalidationonly'
+        process.env.FRONTEND_URL = 'http://localhost:5173'
+        process.env.RAZORPAY_KEY_ID = 'rzp_test_123'
+        process.env.RAZORPAY_KEY_SECRET = 'secret_123'
+        process.env.RAZORPAY_WEBHOOK_SECRET = 'webhook_secret_123'
+        process.env.GOOGLE_CLIENT_ID = 'oauth-client-id'
+        process.env.GOOGLE_CLIENT_SECRET = 'oauth-client-secret'
+        process.env.GOOGLE_REFRESH_TOKEN = 'oauth-refresh-token'
+        process.env.GOOGLE_USER = 'noreply@gmail.com'
+        delete process.env.EMAIL_USER
+        delete process.env.EMAIL_PASS
+
+        assert.doesNotThrow(() => validateEnv())
+    } finally {
+        process.env = previousEnv
+    }
+})
 
 test('accepts positive fees within the production limit', () => {
     assert.equal(isValidFee(500), true)

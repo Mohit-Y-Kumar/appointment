@@ -4,8 +4,6 @@ const requiredEnv = [
     'ADMIN_EMAIL',
     'ADMIN_PASSWORD_HASH',
     'FRONTEND_URL',
-    'EMAIL_USER',
-    'EMAIL_PASS',
     'RAZORPAY_KEY_ID',
     'RAZORPAY_KEY_SECRET',
     'RAZORPAY_WEBHOOK_SECRET'
@@ -54,6 +52,18 @@ export const validateEnv = (customRequired = [], customOptional = []) => {
         if (value === undefined || value === null || String(value).trim() === '') {
             missing.push(key)
         }
+    }
+
+    const hasSmtpConfig = Boolean(process.env.EMAIL_USER && process.env.EMAIL_PASS)
+    const hasOAuthConfig = Boolean(
+        process.env.GOOGLE_CLIENT_ID &&
+        process.env.GOOGLE_CLIENT_SECRET &&
+        process.env.GOOGLE_REFRESH_TOKEN &&
+        process.env.GOOGLE_USER
+    )
+
+    if (!hasSmtpConfig && !hasOAuthConfig) {
+        missing.push('EMAIL_USER/EMAIL_PASS or GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET/GOOGLE_REFRESH_TOKEN/GOOGLE_USER')
     }
 
     if (process.env.NODE_ENV === 'production') {
