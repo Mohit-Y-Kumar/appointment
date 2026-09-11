@@ -27,7 +27,11 @@ const optionalEnv = [
     'CLOUDINARY_CLOUD_NAME',
     'CLOUDINARY_API_KEY',
     'CLOUDINARY_API_SECRET',
-    'MONGO_TRANSACTIONS_REQUIRED'
+    'MONGO_TRANSACTIONS_REQUIRED',
+    'GOOGLE_CLIENT_ID',
+    'GOOGLE_CLIENT_SECRET',
+    'GOOGLE_REFRESH_TOKEN',
+    'GOOGLE_USER'
 ]
 
 export const validateEnv = (customRequired = [], customOptional = []) => {

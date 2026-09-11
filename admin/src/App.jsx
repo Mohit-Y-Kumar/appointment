@@ -4,7 +4,7 @@ import { ToastContainer } from 'react-toastify';
 import { AdminContext } from './context/AdminContext';
 import Navbar from './components/Navbar';
 import Sidebar from './components/Sidebar';
-import { Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router-dom';
 import Dashboard from './pages/Admin/Dashboard';
 import AllApointments from './pages/Admin/AllApointments';
 import AddDoctor from './pages/Admin/AddDoctor';
@@ -36,8 +36,9 @@ const App = () => {
             <Sidebar />
             <main className='ml-16 min-h-[calc(100vh-3.5rem)] min-w-0 flex-1 overflow-y-auto md:ml-56'>
               <Routes>
+                <Route path='/' element={aToken ? <Navigate to='/admin-dashboard' replace /> : dToken ? <Navigate to='/doctor-dashboard' replace /> : <Navigate to='/' replace />} />
+
                 {/* Admin routes */}
-                <Route path='/' element={<></>} />
                 <Route path='/admin-dashboard' element={<Dashboard />} />
                 <Route path='/all-appointments' element={<AllApointments />} />
                 <Route path='/add-doctor' element={<AddDoctor />} />

@@ -1,4 +1,5 @@
 import React, { useContext, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { AdminContext } from '../context/AdminContext'
 import axios from 'axios'
 import { toast } from 'react-toastify'
@@ -7,6 +8,7 @@ import { getCsrfToken } from '../utils/csrfToken.js'
 import { setActiveRole } from '../utils/authRefresh.js'
 
 const Login = () => {
+    const navigate = useNavigate()
 
     const [state, setState] = useState('Admin')
     const [email, setEmail] = useState('')
@@ -27,7 +29,8 @@ const Login = () => {
                 const { data } = await axios.post(backendUrl + '/api/admin/login', { email, password }, { withCredentials: true })
                 if (data.success) {
                     setActiveRole('admin')
-                    setAToken(true);
+                    setAToken(true)
+                    navigate('/admin-dashboard')
                 } else {
                     toast.error(data.message);
                 }
@@ -38,7 +41,8 @@ const Login = () => {
 
                 if (data.success) {
                     setActiveRole('doctor')
-                    setDToken(true);
+                    setDToken(true)
+                    navigate('/doctor-dashboard')
                 } else {
                     toast.error(data.message);
                 }

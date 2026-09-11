@@ -22,7 +22,7 @@ export const csrfTokenGenerator = (req, res, next) => {
     res.cookie('csrfToken', csrfToken, {
         httpOnly: false,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax',
         maxAge: 60 * 60 * 1000,
         path: '/'
     })

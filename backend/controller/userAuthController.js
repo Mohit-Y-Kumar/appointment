@@ -9,6 +9,29 @@ import { validateRequired, validateEmail, validatePassword, formatErrorResponse 
 import { logAuthEvent, logError } from '../config/logger.js'
 import { sendMail } from '../config/mailer.js'
 
+export const buildAuthEmailHtml = ({ title, name, otp, actionLabel, link, description, expiryText }) => `
+    <div style="font-family: Arial, sans-serif; line-height: 1.6; color: #1f2937; max-width: 600px; margin: 0 auto;">
+        <h2 style="margin-bottom: 16px; color: #0f172a;">${title}</h2>
+        <p>Hi ${name},</p>
+        <p>${description}</p>
+        <div style="margin: 20px 0; padding: 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; text-align: center;">
+            <div style="font-size: 12px; letter-spacing: 1px; color: #475569; text-transform: uppercase; margin-bottom: 8px;">OTP</div>
+            <div style="font-size: 32px; font-weight: 700; letter-spacing: 6px; color: #0f172a;">${otp}</div>
+        </div>
+        <p>
+            <a href="${link}" style="display: inline-block; background-color: #2563eb; color: white; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: 600;">
+                ${actionLabel}
+            </a>
+        </p>
+        <p>Or copy and paste this link:</p>
+        <p><a href="${link}">${link}</a></p>
+        <p>${expiryText}</p>
+        <p>Best regards,<br/>DocNest Team</p>
+    </div>
+`
+
+const generateOtp = () => crypto.randomInt(100000, 1000000).toString()
+
 export const registerUser = async (req, res) => {
     try {
         const { name, email, password } = req.body
@@ -40,6 +63,7 @@ export const registerUser = async (req, res) => {
         // Generate verification token (valid for 24 hours)
         const verificationToken = crypto.randomBytes(32).toString('hex')
         const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000)
+        const otpCode = generateOtp()
         
         const user = await new userModel({ 
             name, 
@@ -47,7 +71,9 @@ export const registerUser = async (req, res) => {
             password: hashPassword,
             emailVerified: false,
             verificationToken,
-            verificationTokenExpiry: tokenExpiry
+            verificationTokenExpiry: tokenExpiry,
+            verificationOtp: otpCode,
+            verificationOtpExpiry: new Date(Date.now() + 15 * 60 * 1000)
         }).save()
         
         // Send verification email
@@ -55,19 +81,15 @@ export const registerUser = async (req, res) => {
         const emailSent = await sendMail({
             to: email,
             subject: 'Verify Your DocNest Account',
-            html: `
-                <h2>Email Verification</h2>
-                <p>Hi ${name},</p>
-                <p>Thank you for registering with DocNest. Please verify your email address to complete your registration.</p>
-                <p>
-                    <a href="${verificationLink}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px;">
-                        Verify Email
-                    </a>
-                </p>
-                <p>Or copy and paste this link: ${verificationLink}</p>
-                <p>This link will expire in 24 hours.</p>
-                <p>Best regards,<br/>DocNest Team</p>
-            `
+            html: buildAuthEmailHtml({
+                title: 'Verify Your DocNest Account',
+                name,
+                otp: otpCode,
+                actionLabel: 'Verify Email',
+                link: verificationLink,
+                description: 'Thank you for registering with DocNest. Use the OTP below to verify your email address, or use the link below to confirm instantly.',
+                expiryText: 'This OTP and link expire in 24 hours.'
+            })
         })
         
         if (!emailSent) {
@@ -141,12 +163,12 @@ export const loginUser = async (req, res) => {
 
 export const verifyUserEmail = async (req, res) => {
     try {
-        const { token, email } = req.body
+        const { token, email, otp } = req.body
 
-        if (!token || !email) {
+        if ((!token && !otp) || !email) {
             return res.status(400).json({ 
                 success: false, 
-                message: 'Verification token and email are required.' 
+                message: 'Verification code or token and email are required.' 
             })
         }
 
@@ -167,30 +189,43 @@ export const verifyUserEmail = async (req, res) => {
             })
         }
 
-        // Check if token is valid and not expired
-        if (!user.verificationToken || user.verificationToken !== token) {
-            logAuthEvent('verify_email_failed_invalid_token', user._id, 'user', { email })
-            return res.status(401).json({ 
-                success: false, 
-                message: 'Invalid verification token.' 
-            })
+        let isValid = false
+        if (token) {
+            if (!user.verificationToken || user.verificationToken !== token) {
+                logAuthEvent('verify_email_failed_invalid_token', user._id, 'user', { email })
+                return res.status(401).json({ success: false, message: 'Invalid verification token.' })
+            }
+            if (user.verificationTokenExpiry < new Date()) {
+                logAuthEvent('verify_email_failed_token_expired', user._id, 'user', { email })
+                return res.status(401).json({ success: false, message: 'Verification token has expired. Please register again.' })
+            }
+            isValid = true
         }
 
-        if (user.verificationTokenExpiry < new Date()) {
-            logAuthEvent('verify_email_failed_token_expired', user._id, 'user', { email })
-            return res.status(401).json({ 
-                success: false, 
-                message: 'Verification token has expired. Please register again.' 
-            })
+        if (otp) {
+            const normalizedOtp = String(otp).trim()
+            if (!user.verificationOtp || user.verificationOtp !== normalizedOtp) {
+                logAuthEvent('verify_email_failed_invalid_otp', user._id, 'user', { email })
+                return res.status(401).json({ success: false, message: 'Invalid verification code.' })
+            }
+            if (!user.verificationOtpExpiry || user.verificationOtpExpiry < new Date()) {
+                logAuthEvent('verify_email_failed_otp_expired', user._id, 'user', { email })
+                return res.status(401).json({ success: false, message: 'Verification code has expired. Please request a new one.' })
+            }
+            isValid = true
         }
 
-        // Mark email as verified and issue tokens
+        if (!isValid) {
+            return res.status(401).json({ success: false, message: 'Invalid verification details.' })
+        }
+
         user.emailVerified = true
         user.verificationToken = null
         user.verificationTokenExpiry = null
+        user.verificationOtp = null
+        user.verificationOtpExpiry = null
         await user.save()
 
-        // Issue tokens
         const tokens = await issueTokens({ subjectId: user._id, role: 'user' })
         setAuthCookies(res, tokens, 'user')
 
@@ -220,15 +255,26 @@ export const forgotPassword = async (req, res) => {
         if (!user || !user.emailVerified) return res.json(response)
 
         const resetToken = crypto.randomBytes(32).toString('hex')
+        const otpCode = generateOtp()
         user.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex')
         user.resetPasswordTokenExpiry = new Date(Date.now() + 60 * 60 * 1000)
+        user.resetPasswordOtp = otpCode
+        user.resetPasswordOtpExpiry = new Date(Date.now() + 15 * 60 * 1000)
         await user.save()
 
         const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`
         await sendMail({
             to: email,
             subject: 'Reset Your DocNest Password',
-            html: `<h2>Password Reset</h2><p>Hi ${user.name},</p><p>Use the link below to choose a new password. This link expires in 1 hour.</p><p><a href="${resetLink}">Reset Password</a></p><p>Or copy and paste this link: ${resetLink}</p><p>If you did not request this, you can ignore this email.</p>`
+            html: buildAuthEmailHtml({
+                title: 'Reset Your DocNest Password',
+                name: user.name,
+                otp: otpCode,
+                actionLabel: 'Reset Password',
+                link: resetLink,
+                description: 'Use the OTP below to confirm your reset request, or open the secure link below to set a new password.',
+                expiryText: 'This OTP and link expire in 1 hour.'
+            })
         })
         logAuthEvent('password_reset_requested', user._id, 'user', { email })
         return res.json(response)
@@ -240,8 +286,8 @@ export const forgotPassword = async (req, res) => {
 
 export const resetPassword = async (req, res) => {
     try {
-        const { token, email, password } = req.body
-        if (!token || !email || !password) return res.status(400).json({ success: false, message: 'Reset token, email, and new password are required.' })
+        const { token, email, password, otp } = req.body
+        if ((!token && !otp) || !email || !password) return res.status(400).json({ success: false, message: 'Reset token or code, email, and new password are required.' })
         try {
             validateEmail(email)
             validatePassword(password)
@@ -249,14 +295,30 @@ export const resetPassword = async (req, res) => {
             return res.status(validationErr.statusCode).json({ success: false, message: validationErr.message })
         }
 
-        const tokenHash = crypto.createHash('sha256').update(token).digest('hex')
-        const passwordHash = await bcrypt.hash(password, await bcrypt.genSalt(10))
-        const user = await userModel.findOneAndUpdate(
-            { email, resetPasswordToken: tokenHash, resetPasswordTokenExpiry: { $gt: new Date() } },
-            { $set: { password: passwordHash, resetPasswordToken: null, resetPasswordTokenExpiry: null } },
-            { new: true }
-        )
-        if (!user) return res.status(401).json({ success: false, message: 'Invalid or expired password reset link.' })
+        const query = { email }
+        const update = {
+            $set: {
+                password: await bcrypt.hash(password, await bcrypt.genSalt(10)),
+                resetPasswordToken: null,
+                resetPasswordTokenExpiry: null,
+                resetPasswordOtp: null,
+                resetPasswordOtpExpiry: null
+            }
+        }
+
+        if (token) {
+            const tokenHash = crypto.createHash('sha256').update(token).digest('hex')
+            query.resetPasswordToken = tokenHash
+            query.resetPasswordTokenExpiry = { $gt: new Date() }
+        }
+
+        if (otp) {
+            query.resetPasswordOtp = String(otp).trim()
+            query.resetPasswordOtpExpiry = { $gt: new Date() }
+        }
+
+        const user = await userModel.findOneAndUpdate(query, update, { new: true })
+        if (!user) return res.status(401).json({ success: false, message: 'Invalid or expired password reset link or code.' })
 
         await refreshTokenModel.updateMany({ subjectId: String(user._id), role: 'user', revokedAt: null }, { revokedAt: new Date() })
 
@@ -284,15 +346,26 @@ export const resendVerificationEmail = async (req, res) => {
         }
 
         const verificationToken = crypto.randomBytes(32).toString('hex')
+        const otpCode = generateOtp()
         user.verificationToken = verificationToken
         user.verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000)
+        user.verificationOtp = otpCode
+        user.verificationOtpExpiry = new Date(Date.now() + 15 * 60 * 1000)
         await user.save()
 
         const verificationLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/verify-email?token=${verificationToken}&email=${encodeURIComponent(email)}`
         const emailSent = await sendMail({
             to: email,
             subject: 'Verify Your DocNest Account',
-            html: `<h2>Email Verification</h2><p>Hi ${user.name},</p><p><a href="${verificationLink}">Verify Email</a></p><p>This link expires in 24 hours.</p>`
+            html: buildAuthEmailHtml({
+                title: 'Verify Your DocNest Account',
+                name: user.name,
+                otp: otpCode,
+                actionLabel: 'Verify Email',
+                link: verificationLink,
+                description: 'Use the OTP below to verify your email address, or click the secure link below to confirm instantly.',
+                expiryText: 'This OTP and link expire in 24 hours.'
+            })
         })
         if (!emailSent) return res.status(503).json({ success: false, message: 'Verification email could not be sent. Please try again later.' })
 

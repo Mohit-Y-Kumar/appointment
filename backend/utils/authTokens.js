@@ -15,7 +15,7 @@ export const cookieNames = role => role === 'admin'
 export const cookieOptions = (maxAge, path = '/') => ({
     httpOnly: true,
     secure: isProduction,
-    sameSite: 'lax',
+    sameSite: isProduction ? 'none' : 'lax',
     maxAge,
     path
 })

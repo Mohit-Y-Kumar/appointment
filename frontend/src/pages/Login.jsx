@@ -17,6 +17,31 @@ const Login = () => {
   const [loading, setLoading] = useState(false)
   const [showVerificationMessage, setShowVerificationMessage] = useState(false)
   const [registeredEmail, setRegisteredEmail] = useState('')
+  const [otp, setOtp] = useState('')
+
+  const verifyOtp = async () => {
+    if (loading || !registeredEmail || !otp) return
+    setLoading(true)
+    try {
+      if (!getCsrfToken()) await axios.get(backendUrl + '/health', { withCredentials: true })
+      const { data } = await axios.post(
+        backendUrl + '/api/user/verify-email',
+        { email: registeredEmail, otp },
+        { withCredentials: true }
+      )
+      if (data.success) {
+        setToken(true)
+        toast.success('Email verified successfully! You are now logged in.')
+        setShowVerificationMessage(false)
+      } else {
+        toast.error(data.message || 'Verification failed.')
+      }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Unable to verify email.')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const resendVerification = async () => {
     if (loading || !registeredEmail) return
@@ -106,13 +131,34 @@ const Login = () => {
             </div>
           </div>
           <h2 className='text-xl font-semibold text-slate-800 sm:text-2xl'>Verify Your Email</h2>
-          <p className='text-sm text-slate-500'>We&apos;ve sent a verification link to:</p>
+          <p className='text-sm text-slate-500'>We&apos;ve sent a verification email to:</p>
           <p className='break-all text-sm font-medium text-slate-800'>{registeredEmail}</p>
           <p className='text-xs leading-relaxed text-slate-600 sm:text-sm'>
-            Please click the link in your email to verify your account. The link expires in 24 hours.
+            Use the 6-digit verification code or click the secure link in the email to verify your account. The code and link expire in 24 hours.
           </p>
+
+          <div className='space-y-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 text-left'>
+            <label htmlFor='verify-otp' className='block text-xs font-medium text-slate-500'>Verification code</label>
+            <input
+              id='verify-otp'
+              type='text'
+              value={otp}
+              onChange={event => setOtp(event.target.value.replace(/\D/g, '').slice(0, 6))}
+              placeholder='123456'
+              className='w-full rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-center text-lg font-semibold tracking-[0.35em] text-slate-700 outline-none transition focus:border-indigo-400'
+            />
+            <button
+              type='button'
+              onClick={verifyOtp}
+              disabled={loading || !otp}
+              className='w-full rounded-xl bg-indigo-600 px-3 py-2.5 text-sm font-medium text-white transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60'
+            >
+              {loading ? 'Verifying...' : 'Verify Account'}
+            </button>
+          </div>
+
           <div className='mt-2 rounded-2xl border border-blue-200 bg-blue-50 p-3'>
-            <p className='text-xs text-blue-700'><strong>Tip:</strong> Check your spam folder if you don&apos;t see the email</p>
+            <p className='text-xs text-blue-700'><strong>Tip:</strong> Check your spam folder if you don&apos;t see the email.</p>
           </div>
           <button
             type='button'
