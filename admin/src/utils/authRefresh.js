@@ -9,12 +9,18 @@ export const getActiveRole = () => {
     return parts.length === 2 ? parts.pop().split(';').shift() : null
 }
 
+const isProduction = window.location.protocol === 'https:'
+
 export const setActiveRole = role => {
-    document.cookie = `${activeRoleCookie}=${role}; Path=/; SameSite=Lax`
+    const secure = isProduction ? '; Secure' : ''
+    const sameSite = isProduction ? '; SameSite=None' : '; SameSite=Lax'
+    document.cookie = `${activeRoleCookie}=${role}; Path=/;${sameSite}${secure}`
 }
 
 export const clearActiveRole = () => {
-    document.cookie = `${activeRoleCookie}=; Max-Age=0; Path=/; SameSite=Lax`
+    const secure = isProduction ? '; Secure' : ''
+    const sameSite = isProduction ? '; SameSite=None' : '; SameSite=Lax'
+    document.cookie = `${activeRoleCookie}=; Max-Age=0; Path=/;${sameSite}${secure}`
 }
 
 export const refreshSession = (backendUrl, role) => {
