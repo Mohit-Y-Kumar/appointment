@@ -13,8 +13,9 @@ const ensureCsrfToken = async () => {
 
     try {
         await axios.get(`${import.meta.env.VITE_BACKEND_URL}/health`, { withCredentials: true })
-    } catch {
-        // no-op: backend health endpoint is safe and used to establish the cookie state
+
+    } catch (err) {
+        console.debug('[AdminContext] CSRF cookie bootstrap failed; continuing', err)
     }
 
     return getCsrfToken()
@@ -52,13 +53,13 @@ const AdminContextProvider = (props) => {
             .catch((error) => {
                 if (!isMounted) return
                 setAuthReady(true)
-                
+
                 // Log refresh errors for debugging
                 if (error.response?.status === 401) {
                     console.warn('[AdminContext] Refresh token validation failed (401). This may indicate stale cookies. Clear browser cookies if login issues persist.')
                     console.error('[AdminContext] Refresh error:', error.response?.data?.message)
                 }
-                
+
                 clearActiveRole()
                 setAToken(false)
             })
@@ -130,7 +131,7 @@ const AdminContextProvider = (props) => {
                 toast.success(data.message)
                 getAllAppointments();
             } else {
-                  toast.error(data.message)
+                toast.error(data.message)
             }
 
 
@@ -143,11 +144,11 @@ const AdminContextProvider = (props) => {
 
     const getDashData = async () => {
         try {
-            const { data } = await axios.get(backendUrl + '/api/admin/dashboard',  { withCredentials: true })
+            const { data } = await axios.get(backendUrl + '/api/admin/dashboard', { withCredentials: true })
             if (data.success) {
                 setDashData(data.dashData)
                 console.log(data.dashData)
-            } 
+            }
 
 
         }
@@ -167,7 +168,7 @@ const AdminContextProvider = (props) => {
         getAllDoctors,
         changeAvailability,
         appointments, setAppointments, appointmentPagination,
-        getAllAppointments, cancelAppointment,dashData,getDashData
+        getAllAppointments, cancelAppointment, dashData, getDashData
 
     }
     return (

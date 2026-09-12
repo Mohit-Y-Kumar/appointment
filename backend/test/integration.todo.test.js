@@ -1,7 +1,5 @@
 import test from 'node:test'
 
-// These scenarios require an isolated MongoDB fixture and mocked external services.
-// Keep them named here until the integration harness is provisioned.
 
 test.todo('successful user login returns access and refresh cookies')
 test.todo('successful doctor login returns access and refresh cookies')

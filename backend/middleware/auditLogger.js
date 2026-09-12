@@ -4,7 +4,6 @@ import logger from '../config/logger.js'
 
 /**
  * Audit Logging Middleware
- * Tracks all important API operations for compliance and security
  */
 
 const safeAuditWrite = async (logEntry) => {
@@ -212,7 +211,6 @@ const getResponseStatus = (statusCode) => {
 
 /**
  * Log specific action with context
- * Can be called manually for important operations
  */
 export const logAuditAction = async (userId, action, resourceType, resourceId, details = {}) => {
     try {

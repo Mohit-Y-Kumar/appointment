@@ -52,7 +52,7 @@ const auditLogSchema = new mongoose.Schema(
         userAgent: String,
         requestBody: {
             type: mongoose.Schema.Types.Mixed,
-            select: false  // Don't include by default to reduce size
+            select: false  
         },
         responseStatus: {
             type: String,
@@ -62,7 +62,7 @@ const auditLogSchema = new mongoose.Schema(
         errorMessage: String,
         changes: {
             type: mongoose.Schema.Types.Mixed,
-            sparse: true  // Only for update operations
+            sparse: true  
         },
         duration: {
             type: Number,
@@ -78,7 +78,6 @@ const auditLogSchema = new mongoose.Schema(
     { timestamps: true }
 )
 
-// Compound indexes for audit queries
 auditLogSchema.index({ userId: 1, timestamp: -1 })
 auditLogSchema.index({ userRole: 1, action: 1, timestamp: -1 })
 auditLogSchema.index({ resourceType: 1, resourceId: 1, timestamp: -1 })

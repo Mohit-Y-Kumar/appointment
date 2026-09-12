@@ -1,13 +1,8 @@
 /**
  * CSRF Token Management Utility for Frontend
- * 
- * Handles reading CSRF token from cookie and including it in request headers
  */
 
-/**
- * Get CSRF token from browser cookies
- * @returns {string|null} CSRF token or null if not found
- */
+
 export const getCsrfToken = () => {
     const name = 'csrfToken'
     const value = `; ${document.cookie}`
@@ -16,11 +11,6 @@ export const getCsrfToken = () => {
     return null
 }
 
-/**
- * Setup axios instance with automatic CSRF token injection
- * @param {Object} axiosInstance - Axios instance to configure
- * @returns {Object} Configured axios instance
- */
 export const setupCsrfInterceptor = (axiosInstance) => {
     axiosInstance.interceptors.request.use(
         (config) => {
@@ -39,10 +29,7 @@ export const setupCsrfInterceptor = (axiosInstance) => {
     return axiosInstance
 }
 
-/**
- * Check if CSRF token is available in cookies
- * @returns {boolean} True if token exists
- */
+
 export const hasCsrfToken = () => {
     return getCsrfToken() !== null
 }

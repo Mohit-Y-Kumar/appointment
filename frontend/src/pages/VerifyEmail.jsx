@@ -9,7 +9,7 @@ const VerifyEmail = () => {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const { backendUrl, setToken } = useContext(AppContext)
-  const [status, setStatus] = useState('verifying') // verifying, success, error
+  const [status, setStatus] = useState('verifying') 
   const [message, setMessage] = useState('Verifying your email...')
   const [loading, setLoading] = useState(true)
   const [email, setEmail] = useState(searchParams.get('email') || '')
@@ -55,7 +55,7 @@ const VerifyEmail = () => {
   }
 
   useEffect(() => {
-    // Navigate to dashboard when redirect happens
+  
     const timer = setTimeout(() => {
       if (status === 'success') navigate('/')
     }, 2000)

@@ -12,8 +12,8 @@ const ensureCsrfToken = async () => {
 
   try {
     await axios.get(`${import.meta.env.VITE_BACKEND_URL}/health`, { withCredentials: true })
-  } catch {
-    // no-op: safe endpoint used to establish the CSRF cookie state
+  } catch (err) {
+    console.debug('[DoctorContext] CSRF cookie bootstrap failed; continuing', err)
   }
 
   return getCsrfToken()
@@ -66,10 +66,10 @@ const DoctorContextProvider = (props) => {
     }
   }, [backendUrl])
 
-  // ── Auth header — matches your existing pattern ───────────────────────────
+  // Auth header 
   const authHeader = () => ({ withCredentials: true })
 
-  // ── EXISTING: get all appointments ────────────────────────────────────────
+  //  get all appointments 
   const getAppointments = async (page = 1) => {
     try {
       if (!dToken) return
@@ -88,7 +88,7 @@ const DoctorContextProvider = (props) => {
     }
   }
 
-  // ── EXISTING: complete appointment ────────────────────────────────────────
+  //  complete appointment 
   const completeAppointment = async (appointmentId) => {
     try {
       await ensureCsrfToken()
@@ -108,7 +108,7 @@ const DoctorContextProvider = (props) => {
     }
   }
 
-  // ── EXISTING: cancel appointment ──────────────────────────────────────────
+  //  cancel appointment 
   const cancelAppointment = async (appointmentId) => {
     try {
       await ensureCsrfToken()
@@ -128,7 +128,7 @@ const DoctorContextProvider = (props) => {
     }
   }
 
-  // ── EXISTING: get dashboard summary ──────────────────────────────────────
+  //  get dashboard summary ──────────────────────────────────────
   const getDashData = async () => {
     try {
       if (!dToken) return
@@ -146,7 +146,7 @@ const DoctorContextProvider = (props) => {
     }
   }
 
-  // ── EXISTING: get profile ─────────────────────────────────────────────────
+  //  get profile 
   const getProfileData = async () => {
     try {
       const { data } = await axios.get(
@@ -163,8 +163,6 @@ const DoctorContextProvider = (props) => {
     }
   }
 
-  // ── NEW: get star ratings breakdown from reviewModel ──────────────────────
-  // Returns: { average, totalReviews, byStars: [{stars, count, pct}] } | null
   const getDoctorRatings = async () => {
     try {
       const { data } = await axios.get(
@@ -180,9 +178,6 @@ const DoctorContextProvider = (props) => {
     }
   }
 
-  // ── NEW: get patient visit stats ──────────────────────────────────────────
-  // period: 'daily' | 'monthly' | 'yearly'
-  // Returns: [{ name, new, ret }]
   const getVisitStats = async (period = 'daily') => {
     try {
       const { data } = await axios.get(
@@ -198,9 +193,6 @@ const DoctorContextProvider = (props) => {
     }
   }
 
-  // ── NEW: get revenue data ─────────────────────────────────────────────────
-  // period: 'daily' | 'monthly' | 'yearly'
-  // Returns: [{ name, revenue }]
   const getRevenueData = async (period = 'monthly') => {
     try {
       const { data } = await axios.get(
@@ -216,8 +208,6 @@ const DoctorContextProvider = (props) => {
     }
   }
 
-  // ── NEW: get today's upcoming appointments ────────────────────────────────
-  // Returns: appointment array with embedded userData (your schema)
   const getUpcomingToday = async () => {
     try {
       const { data } = await axios.get(

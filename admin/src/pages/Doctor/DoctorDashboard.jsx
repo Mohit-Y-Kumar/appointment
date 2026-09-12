@@ -91,7 +91,7 @@ const DoctorDashboard = () => {
     const avgRating   = ratingsData?.average ?? 0
 
     return (
-        <div className='mx-auto w-full max-w-[1400px] space-y-4 p-3 sm:space-y-5 sm:p-5'>
+        <div className='mx-auto w-full max-w-350 space-y-4 p-3 sm:space-y-5 sm:p-5'>
 
             {/* Top Bar */}
             <div className='rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-[0_12px_28px_rgba(15,23,42,0.04)] backdrop-blur-sm'>

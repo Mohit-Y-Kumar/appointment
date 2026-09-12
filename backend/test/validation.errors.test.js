@@ -4,7 +4,6 @@ import { validateRequired, validateEmail, validatePassword, validatePhone, valid
 
 /**
  * Validation Error Tests
- * Ensures proper validation messages for user feedback
  */
 
 test('validateRequired returns error for missing fields', t => {

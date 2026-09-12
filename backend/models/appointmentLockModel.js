@@ -42,7 +42,6 @@ const appointmentLockSchema = new mongoose.Schema(
     { timestamps: true }
 )
 
-// Compound unique index for slot reservation
 appointmentLockSchema.index(
     { docId: 1, slotDate: 1, slotTime: 1 },
     { 

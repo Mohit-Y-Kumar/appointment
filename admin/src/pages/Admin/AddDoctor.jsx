@@ -215,7 +215,7 @@ const AddDoctor = () => {
                 <form onSubmit={onSubmitHandler} className='overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-[0_18px_35px_rgba(15,23,42,0.06)]'>
 
                     {/* Upload Section */}
-                    <div className='border-b border-slate-100 bg-gradient-to-r from-indigo-50 via-white to-cyan-50 p-6 sm:p-8'>
+                    <div className='border-b border-slate-100 bg-linear-to-r from-indigo-50 via-white to-cyan-50 p-6 sm:p-8'>
                         <div className='flex flex-col items-center gap-5 sm:flex-row'>
                             <label htmlFor='doc-img' className='group relative shrink-0 cursor-pointer'>
                                 <div className='h-24 w-24 overflow-hidden rounded-full border-4 border-white bg-slate-100 shadow-md transition-all group-hover:opacity-90 sm:h-28 sm:w-28'>
@@ -320,7 +320,7 @@ const AddDoctor = () => {
                         <div className='mt-6'>
                             <label className={lbl}>Professional Bio</label>
                             <textarea onChange={e => setAbout(e.target.value)} value={about}
-                                className={inp + ' min-h-[110px] resize-none'}
+                                className={inp + ' min-h-27.5 resize-none'}
                                 placeholder="Briefly describe the doctor's expertise and background..." required />
                         </div>
 

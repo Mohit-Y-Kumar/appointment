@@ -2,7 +2,6 @@ import crypto from 'crypto'
 
 /**
  * CSRF Protection 
- * 
  * Validates CSRF tokens for state-changing requests (POST, PUT, DELETE)
  * The token is stored in a non-httpOnly cookie and must be sent in the X-CSRF-Token header
  */

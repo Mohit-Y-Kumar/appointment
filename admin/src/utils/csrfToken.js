@@ -1,8 +1,4 @@
 /**
-  Handles reading CSRF token from cookie and including it in request headers
- */
-
-/**
  * Get CSRF token from browser cookies
  */
 export const getCsrfToken = () => {

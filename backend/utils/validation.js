@@ -17,8 +17,6 @@ export const isValidAppointmentDate = value => {
 
 export const isValidSlotTime = value => /^(0?[1-9]|1[0-2]):[0-5]\d (AM|PM)$/.test(value || '')
 
-// Slot dates are stored as DD_MM_YYYY. Passing a converted DD/MM/YYYY value
-// to Date parses it inconsistently across environments (often as MM/DD/YYYY).
 export const parseAppointmentDateTime = (slotDate, slotTime) => {
     const dateMatch = /^(\d{1,2})_(\d{1,2})_(\d{4})$/.exec(slotDate || '')
     const timeMatch = /^(0?[1-9]|1[0-2]):([0-5]\d) (AM|PM)$/.exec(slotTime || '')

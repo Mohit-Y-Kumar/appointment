@@ -11,7 +11,7 @@ const MyProfile = () => {
   const [loading, setLoading] = useState(false)
 
   const updateUserProfileData = async () => {
-    console.log('Gender being sent:', userData.gender)  // ye add karo
+    console.log('Gender being sent:', userData.gender)  
     console.log('DOB being sent:', userData.dob)
     if (loading) return
     if (!userData.gender || userData.gender === 'Not Selected') {

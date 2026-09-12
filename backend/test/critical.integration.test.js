@@ -1,18 +1,11 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
 
-/**
- * Critical Integration Tests for DocNest
- * These tests validate core business logic and security mechanisms
- * 
- * To run: npm test
- */
 
-// ==================== AUTHENTICATION TESTS ====================
+// AUTHENTICATION TESTS
 
 test('successful user login returns access and refresh cookies', async t => {
-    // This would require an actual database connection and user fixture
-    // TODO: Implement with database setup
+    
     assert.ok(true) // Placeholder
 })
 
@@ -48,14 +41,13 @@ test('successful logout revokes refresh token', async t => {
     assert.ok(true) // Placeholder
 })
 
-// ==================== APPOINTMENT TESTS ====================
+//  APPOINTMENT TESTS 
 
 test('booking rejects invalid doctor ID', async t => {
     assert.ok(true) // Placeholder
 })
 
 test('booking rejects duplicate appointment slot', async t => {
-    // Critical: Prevents double-booking
     assert.ok(true) // Placeholder
 })
 
@@ -72,12 +64,10 @@ test('booking with past date is rejected', async t => {
 })
 
 test('unpaid appointment can be cancelled and releases slot', async t => {
-    // Critical: Must free up the slot for other users
     assert.ok(true) // Placeholder
 })
 
 test('paid appointment cancellation is rejected', async t => {
-    // Critical: Users must request refund instead
     assert.ok(true) // Placeholder
 })
 
@@ -89,10 +79,9 @@ test('unpaid appointment completion is rejected', async t => {
     assert.ok(true) // Placeholder
 })
 
-// ==================== REVIEW TESTS ====================
+//  REVIEW TESTS 
 
 test('review is allowed only after completed paid appointment', async t => {
-    // Critical: Prevent fake reviews
     assert.ok(true) // Placeholder
 })
 
@@ -101,7 +90,7 @@ test('review contains XSS payload is sanitized', async t => {
     assert.ok(true) // Placeholder
 })
 
-// ==================== REFUND TESTS ====================
+//  REFUND TESTS 
 
 test('refund can be requested for unpaid appointment', async t => {
     assert.ok(true) // Placeholder
@@ -122,7 +111,7 @@ test('refund rejects invalid webhook signature', async t => {
     assert.ok(true) // Placeholder
 })
 
-// ==================== REAL-TIME COMMUNICATION TESTS ====================
+//  REAL-TIME COMMUNICATION TESTS 
 
 test('chat room access is limited to appointment participants', async t => {
     // Critical: Privacy
@@ -143,7 +132,7 @@ test('call end updates appointment as completed', async t => {
     assert.ok(true) // Placeholder
 })
 
-// ==================== PAYMENT TESTS ====================
+//  PAYMENT TESTS 
 
 test('payment signature validation accepts valid signature', async t => {
     // Critical: Financial security
@@ -170,7 +159,7 @@ test('webhook idempotency prevents duplicate processing', async t => {
     assert.ok(true) // Placeholder
 })
 
-// ==================== SECURITY & RATE LIMIT TESTS ====================
+//  SECURITY & RATE LIMIT TESTS 
 
 test('auth rate limiting returns 429 after threshold', async t => {
     // Critical: Brute force protection
@@ -197,7 +186,7 @@ test('socket authentication revalidates token', async t => {
     assert.ok(true) // Placeholder
 })
 
-// ==================== DATA VALIDATION TESTS ====================
+//  DATA VALIDATION TESTS 
 
 test('email validation rejects invalid formats', async t => {
     assert.ok(true) // Placeholder
@@ -215,7 +204,7 @@ test('slot time validation rejects invalid formats', async t => {
     assert.ok(true) // Placeholder
 })
 
-// ==================== ERROR HANDLING TESTS ====================
+//  ERROR HANDLING TESTS 
 
 test('error response includes user-friendly message', async t => {
     assert.ok(true) // Placeholder
@@ -230,7 +219,7 @@ test('database error response hides internal details', async t => {
     assert.ok(true) // Placeholder
 })
 
-// ==================== LOGGING TESTS ====================
+//  LOGGING TESTS 
 
 test('sensitive data is redacted from logs', async t => {
     // Critical: Information security

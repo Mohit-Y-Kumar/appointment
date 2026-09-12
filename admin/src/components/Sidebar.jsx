@@ -29,7 +29,7 @@ const Sidebar = () => {
       {/* Logo + Role zone */}
       <div className='px-3 md:px-4 py-5 border-b border-white/10'>
         <div className='flex items-center gap-3'>
-          <div className='relative flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-indigo-500 via-blue-600 to-cyan-500 shadow-[0_10px_18px_rgba(59,130,246,0.35)] ring-1 ring-white/20 shrink-0'>
+          <div className='relative flex h-9 w-9 items-center justify-center rounded-xl bg-linear-to-br from-indigo-500 via-blue-600 to-cyan-500 shadow-[0_10px_18px_rgba(59,130,246,0.35)] ring-1 ring-white/20 shrink-0'>
             <div className='absolute h-4 w-1 rounded-full bg-white' />
             <div className='absolute h-1 w-4 rounded-full bg-white' />
             <span className='absolute -right-1 -top-1 h-2.5 w-2.5 rounded-full border-2 border-slate-950 bg-emerald-400' />
@@ -60,7 +60,7 @@ const Sidebar = () => {
               `group relative flex items-center gap-3 rounded-2xl px-2.5 py-2.5 md:px-3.5 transition-all duration-200 ease-out
                justify-center md:justify-start
                ${isActive
-                 ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white shadow-[0_12px_18px_rgba(79,70,229,0.35)]'
+                 ? 'bg-linear-to-r from-indigo-600 to-blue-600 text-white shadow-[0_12px_18px_rgba(79,70,229,0.35)]'
                  : 'text-slate-300 hover:bg-white/6 hover:text-white'
                }`
             }

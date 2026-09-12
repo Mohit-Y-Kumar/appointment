@@ -74,7 +74,6 @@ app.use(logRequest)
 
 app.use(auditLog)
 
-// CSRF Protection
 app.use(csrfTokenGenerator)
 app.use(csrfTokenValidator)
 

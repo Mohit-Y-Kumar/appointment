@@ -2,9 +2,7 @@ import React from 'react'
 import { toast } from 'react-toastify'
 
 /**
- * Error Boundary Component
- * Catches React component errors and displays a fallback UI
- * Prevents entire application from crashing
+ Catches React component errors and displays a fallback UI
  */
 class ErrorBoundary extends React.Component {
     constructor(props) {
@@ -36,8 +34,7 @@ class ErrorBoundary extends React.Component {
         // Show user-friendly toast notification
         toast.error('An unexpected error occurred. Please try refreshing the page.')
 
-        // Optional: Send error to external logging service
-        // reportErrorToService(error, errorInfo)
+        
     }
 
     handleReset = () => {

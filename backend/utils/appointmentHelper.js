@@ -177,7 +177,6 @@ const convertTo24Hour = (hour, minute, period) => {
 
 /**
  * Cleanup expired reservations
- * Should be run periodically by a cron job
  */
 export const cleanupExpiredReservations = async () => {
     const deleted = await appointmentLockModel.deleteMany({

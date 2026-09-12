@@ -70,7 +70,6 @@ const doctorSchema = new mongoose.Schema(
 
 );
 
-// Compound indexes for common queries
 doctorSchema.index({ available: 1, speciality: 1 });
 doctorSchema.index({ available: 1, fees: 1 });
 doctorSchema.index({ averageRating: -1 });

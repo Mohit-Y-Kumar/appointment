@@ -1,4 +1,3 @@
-
 const isTestRuntime = () => process.env.NODE_ENV === 'test'
 
 const returnOrThrow = (error) => {

@@ -42,7 +42,6 @@ const appointmentSchema = new mongoose.Schema({
     },
 }, { timestamps: true })
 
-// Compound indexes for common queries
 appointmentSchema.index({ userId: 1, cancelled: 1 });
 appointmentSchema.index({ docId: 1, slotDate: 1, cancelled: 1 });
 appointmentSchema.index({ userId: 1, date: -1 });

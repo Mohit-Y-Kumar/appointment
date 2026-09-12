@@ -6,7 +6,6 @@ import assert from 'node:assert/strict'
  * Validates payment processing, webhook handling, and refund logic
  * 
  * Note: These tests use mocked payment data
- * In production, use actual Razorpay sandbox credentials
  */
 
 test('payment signature validation accepts valid Razorpay signature', t => {

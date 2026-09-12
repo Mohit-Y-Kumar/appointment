@@ -36,7 +36,7 @@ const Dashboard = () => {
   }
 
   return (
-    <div className='mx-auto mt-5 w-full max-w-[1400px] p-4 sm:p-5 md:p-6 lg:p-7'>
+    <div className='mx-auto mt-5 w-full max-w-350 p-4 sm:p-5 md:p-6 lg:p-7'>
 
       {/* Top bar */}
       <div className='mb-6 rounded-2xl border border-slate-200/80 bg-white/80 p-4 shadow-[0_10px_25px_rgba(15,23,42,0.04)] backdrop-blur-sm'>

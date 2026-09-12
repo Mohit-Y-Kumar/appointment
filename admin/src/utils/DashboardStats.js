@@ -43,7 +43,7 @@ export const useDashboardStats = (appointments, doctors) => {
       ? (rated.reduce((s, d) => s + d.averageRating, 0) / rated.length).toFixed(1)
       : null
 
-    // ── Monthly appointments — last 6 months ──
+    //Monthly appointmentslast 6 months 
     const monthlyData = []
     for (let i = 5; i >= 0; i--) {
       const d = new Date(now)
@@ -59,7 +59,7 @@ export const useDashboardStats = (appointments, doctors) => {
       monthlyData.push({ month: lbl, appointments: cnt })
     }
 
-    // ── Status pie ──
+    //  Status pie 
     const statusData = [
       { name: 'Confirmed', value: paid,      color: C.sky   },
       { name: 'Pending',   value: pending,   color: C.amber },
@@ -67,7 +67,7 @@ export const useDashboardStats = (appointments, doctors) => {
       { name: 'Completed', value: completed, color: C.teal  },
     ].filter(d => d.value > 0)
 
-    // ── Gender pie ──
+    //  Gender pie 
     const gMap = { Male: 0, Female: 0, Other: 0 }
     appts.forEach(a => {
       const g = a.userData?.gender
@@ -81,7 +81,7 @@ export const useDashboardStats = (appointments, doctors) => {
       { name: 'Other',  value: gMap.Other,  color: C.slate },
     ].filter(d => d.value > 0)
 
-    // ── Speciality pie ──
+    //  Speciality pie 
     const spMap = {}
     appts.forEach(a => {
       const sp = a.docData?.speciality || 'General'
@@ -91,7 +91,7 @@ export const useDashboardStats = (appointments, doctors) => {
       .sort((a, b) => b[1] - a[1])
       .map(([name, value], i) => ({ name, value, color: PIE_COLORS[i % PIE_COLORS.length] }))
 
-    // ── Top 5 doctors by bookings ──
+    //  Top 5 doctors by bookings 
     const docMap = {}
     appts.forEach(a => {
       const nm = a.docData?.name || 'Unknown'
@@ -102,7 +102,7 @@ export const useDashboardStats = (appointments, doctors) => {
       .slice(0, 5)
       .map(([name, count]) => ({ name, count }))
 
-    // ── Daily revenue — current month ──
+    //  Daily revenue — current month 
     const dailyMap = {}
     appts.filter(a => !a.cancelled && a.payment).forEach(a => {
       const s = parseSlot(a.slotDate)
@@ -116,7 +116,7 @@ export const useDashboardStats = (appointments, doctors) => {
       (_, i) => ({ day: String(i + 1), revenue: dailyMap[i + 1] || 0 })
     )
 
-    // ── Revenue trend — last 6 months ──
+    //  Revenue trend — last 6 months 
     const revTrendData      = []
     let   totalMonthRevenue = 0
     for (let i = 5; i >= 0; i--) {
@@ -140,7 +140,7 @@ export const useDashboardStats = (appointments, doctors) => {
     const target      = Math.round(avgMonthRev * 1.1) || 5000
     revTrendData.forEach(d => { d.target = target })
 
-    // ── Revenue per doctor ──
+    //  Revenue per doctor 
     const paidAppts = appts.filter(a => a.payment && !a.cancelled)
 
     const weekStart = new Date()

@@ -93,11 +93,6 @@ const authenticateSocket = async (socket, next) => {
     }
 }
 
-/**
- * Re-validate socket authentication
- * Checks if the user's token is still valid and not revoked
- * Should be called periodically or on important operations
- */
 const revalidateSocketAuth = async (socket, force = false) => {
     try {
         // Check if enough time has passed since last auth check (5 minutes)

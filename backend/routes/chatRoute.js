@@ -11,10 +11,8 @@ import { sanitizeChatMessage } from '../utils/validation.js'
 
 const chatRouter = express.Router()
 
-// AI chat message
 chatRouter.post('/message', aiLimiter, authUser, chat)
 
-// Chat image upload
 chatRouter.post('/upload-image', authParticipant, upload.single('image'), uploadChatImage)
 
 const canAccessRoom = async (participantId, participantRole, roomId) => {

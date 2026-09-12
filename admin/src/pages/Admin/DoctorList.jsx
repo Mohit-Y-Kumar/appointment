@@ -83,7 +83,7 @@ const DoctorList = () => {
                                 <img
                                     className='h-full w-full object-cover transition-transform duration-500 group-hover:scale-105'
                                     src={doc.image} alt={doc.name} />
-                                <div className='absolute inset-0 bg-gradient-to-t from-slate-900/20 to-transparent opacity-0 transition-opacity group-hover:opacity-100' />
+                                <div className='absolute inset-0 bg-linear-to-t from-slate-900/20 to-transparent opacity-0 transition-opacity group-hover:opacity-100' />
 
                                 {/* Rating badge */}
                                 {doc.averageRating > 0 && (
