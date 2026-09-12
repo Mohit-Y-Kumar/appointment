@@ -32,6 +32,25 @@ export const buildAuthEmailHtml = ({ title, name, otp, actionLabel, link, descri
 
 const generateOtp = () => crypto.randomInt(100000, 1000000).toString()
 
+export const hashOtp = (value) => crypto.createHash('sha256').update(String(value).trim()).digest('hex')
+export const matchesOtp = (candidate, storedHash) => {
+    if (!candidate || !storedHash) return false
+    return hashOtp(candidate) === storedHash
+}
+
+const sendAuthEmail = async ({ to, subject, name, otp, actionLabel, link, description, expiryText }) => {
+    try {
+        return await sendMail({
+            to,
+            subject,
+            html: buildAuthEmailHtml({ title: subject, name, otp, actionLabel, link, description, expiryText })
+        })
+    } catch (error) {
+        logError(error, { action: 'sendAuthEmail' })
+        return false
+    }
+}
+
 export const registerUser = async (req, res) => {
     try {
         const { name, email, password } = req.body
@@ -72,30 +91,28 @@ export const registerUser = async (req, res) => {
             emailVerified: false,
             verificationToken,
             verificationTokenExpiry: tokenExpiry,
-            verificationOtp: otpCode,
+            verificationOtp: hashOtp(otpCode),
             verificationOtpExpiry: new Date(Date.now() + 15 * 60 * 1000)
         }).save()
         
-        // Send verification email
+        // Send verification email in the background so the user is not blocked while SMTP is slow or unavailable.
         const verificationLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/verify-email?token=${verificationToken}&email=${email}`
-        const emailSent = await sendMail({
+        void sendAuthEmail({
             to: email,
             subject: 'Verify Your DocNest Account',
-            html: buildAuthEmailHtml({
-                title: 'Verify Your DocNest Account',
-                name,
-                otp: otpCode,
-                actionLabel: 'Verify Email',
-                link: verificationLink,
-                description: 'Thank you for registering with DocNest. Use the OTP below to verify your email address, or use the link below to confirm instantly.',
-                expiryText: 'This OTP and link expire in 24 hours.'
-            })
+            name,
+            otp: otpCode,
+            actionLabel: 'Verify Email',
+            link: verificationLink,
+            description: 'Thank you for registering with DocNest. Use the OTP below to verify your email address, or use the link below to confirm instantly.',
+            expiryText: 'This OTP and link expire in 24 hours.'
+        }).then((emailSent) => {
+            if (!emailSent) {
+                logAuthEvent('register_email_failed', user._id, 'user', { email })
+                return
+            }
+            logAuthEvent('register_email_sent', user._id, 'user', { email })
         })
-        
-        if (!emailSent) {
-            logAuthEvent('register_email_failed', user._id, 'user', { email })
-            return res.status(503).json({ success: false, message: 'Account created, but the verification email could not be sent. Please use resend verification.' })
-        }
 
         logAuthEvent('register_success', user._id, 'user', { email })
         return res.status(201).json({ 
@@ -204,7 +221,7 @@ export const verifyUserEmail = async (req, res) => {
 
         if (otp) {
             const normalizedOtp = String(otp).trim()
-            if (!user.verificationOtp || user.verificationOtp !== normalizedOtp) {
+            if (!matchesOtp(normalizedOtp, user.verificationOtp)) {
                 logAuthEvent('verify_email_failed_invalid_otp', user._id, 'user', { email })
                 return res.status(401).json({ success: false, message: 'Invalid verification code.' })
             }
@@ -258,25 +275,27 @@ export const forgotPassword = async (req, res) => {
         const otpCode = generateOtp()
         user.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex')
         user.resetPasswordTokenExpiry = new Date(Date.now() + 60 * 60 * 1000)
-        user.resetPasswordOtp = otpCode
+        user.resetPasswordOtp = hashOtp(otpCode)
         user.resetPasswordOtpExpiry = new Date(Date.now() + 15 * 60 * 1000)
         await user.save()
 
         const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/reset-password?token=${resetToken}&email=${encodeURIComponent(email)}`
-        await sendMail({
+        void sendAuthEmail({
             to: email,
             subject: 'Reset Your DocNest Password',
-            html: buildAuthEmailHtml({
-                title: 'Reset Your DocNest Password',
-                name: user.name,
-                otp: otpCode,
-                actionLabel: 'Reset Password',
-                link: resetLink,
-                description: 'Use the OTP below to confirm your reset request, or open the secure link below to set a new password.',
-                expiryText: 'This OTP and link expire in 1 hour.'
-            })
+            name: user.name,
+            otp: otpCode,
+            actionLabel: 'Reset Password',
+            link: resetLink,
+            description: 'Use the OTP below to confirm your reset request, or open the secure link below to set a new password.',
+            expiryText: 'This OTP and link expire in 1 hour.'
+        }).then((emailSent) => {
+            if (!emailSent) {
+                logAuthEvent('password_reset_email_failed', user._id, 'user', { email })
+                return
+            }
+            logAuthEvent('password_reset_requested', user._id, 'user', { email })
         })
-        logAuthEvent('password_reset_requested', user._id, 'user', { email })
         return res.json(response)
     } catch (error) {
         logError(error, { action: 'forgotPassword' })
@@ -313,7 +332,7 @@ export const resetPassword = async (req, res) => {
         }
 
         if (otp) {
-            query.resetPasswordOtp = String(otp).trim()
+            query.resetPasswordOtp = hashOtp(String(otp).trim())
             query.resetPasswordOtpExpiry = { $gt: new Date() }
         }
 
@@ -349,27 +368,28 @@ export const resendVerificationEmail = async (req, res) => {
         const otpCode = generateOtp()
         user.verificationToken = verificationToken
         user.verificationTokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000)
-        user.verificationOtp = otpCode
+        user.verificationOtp = hashOtp(otpCode)
         user.verificationOtpExpiry = new Date(Date.now() + 15 * 60 * 1000)
         await user.save()
 
         const verificationLink = `${process.env.FRONTEND_URL || 'http://localhost:5173'}/verify-email?token=${verificationToken}&email=${encodeURIComponent(email)}`
-        const emailSent = await sendMail({
+        void sendAuthEmail({
             to: email,
             subject: 'Verify Your DocNest Account',
-            html: buildAuthEmailHtml({
-                title: 'Verify Your DocNest Account',
-                name: user.name,
-                otp: otpCode,
-                actionLabel: 'Verify Email',
-                link: verificationLink,
-                description: 'Use the OTP below to verify your email address, or click the secure link below to confirm instantly.',
-                expiryText: 'This OTP and link expire in 24 hours.'
-            })
+            name: user.name,
+            otp: otpCode,
+            actionLabel: 'Verify Email',
+            link: verificationLink,
+            description: 'Use the OTP below to verify your email address, or click the secure link below to confirm instantly.',
+            expiryText: 'This OTP and link expire in 24 hours.'
+        }).then((emailSent) => {
+            if (!emailSent) {
+                logAuthEvent('verification_email_failed', user._id, 'user', { email })
+                return
+            }
+            logAuthEvent('verification_email_resent', user._id, 'user', { email })
         })
-        if (!emailSent) return res.status(503).json({ success: false, message: 'Verification email could not be sent. Please try again later.' })
 
-        logAuthEvent('verification_email_resent', user._id, 'user', { email })
         return res.json({ success: true, message: 'Verification email sent successfully.' })
     } catch (error) {
         logError(error, { action: 'resendVerificationEmail' })

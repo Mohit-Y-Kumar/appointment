@@ -36,9 +36,8 @@ export const sendMail = async ({ to, subject, html }) => {
     }
 
     try {
-        await smtpTransport.verify()
-        await smtpTransport.sendMail(mailOptions)
-        console.log(`[Mailer] Email sent via SMTP to ${to}`)
+        const info = await smtpTransport.sendMail(mailOptions)
+        console.log(`[Mailer] Email sent via SMTP to ${to} (${info?.messageId || 'no-message-id'})`)
         return true
     } catch (error) {
         console.error('[Mailer] Gmail SMTP send failed:', error.message)
