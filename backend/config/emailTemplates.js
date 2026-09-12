@@ -5,12 +5,13 @@ const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, character =>
   '"': '&quot;',
   "'": '&#39;'
 })[character])
+const safeUrl = value => (value ? escapeHtml(value) : '')
 
 const LOGO_HEADER = `
   <div style="background:linear-gradient(135deg,#4F46E5,#7C3AED);padding:28px 24px;text-align:center">
     <div style="display:inline-flex;align-items:center;gap:10px;background:rgba(255,255,255,0.12);padding:10px 22px;border-radius:50px;border:1px solid rgba(255,255,255,0.2)">
      <div style="width:32px;height:32px;background:white;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;overflow:hidden">
-      <img src="${escapeHtml(process.env.LOGO_URL)}" alt="DocNest" style="width:24px;height:24px;object-fit:contain" />
+      <img src="${safeUrl(process.env.LOGO_URL)}" alt="DocNest" style="width:24px;height:24px;object-fit:contain" />
        </div>
       <span style="color:white;font-size:20px;font-weight:700;font-family:Arial,sans-serif;letter-spacing:0.5px">DocNest</span>
     </div>
@@ -20,7 +21,7 @@ const LOGO_HEADER = `
 const FOOTER = `
   <div style="background:#f8fafc;padding:18px;text-align:center;border-top:1px solid #e2e8f0">
     <div style="display:inline-flex;align-items:center;gap:6px;margin-bottom:6px">
-    <img src="${escapeHtml(process.env.LOGO_URL)}" alt="DocNest" style="height:30px;object-fit:contain;vertical-align:middle" />
+    <img src="${safeUrl(process.env.LOGO_URL)}" alt="DocNest" style="height:30px;object-fit:contain;vertical-align:middle" />
       <span style="color:#64748b;font-size:13px;font-weight:600;font-family:Arial,sans-serif">DocNest</span>
     </div>
     <p style="color:#94a3b8;font-size:11px;margin:0;font-family:Arial,sans-serif">© ${new Date().getFullYear()} DocNest. All rights reserved.</p>
@@ -47,19 +48,19 @@ export const appointmentBookedTemplate = ({ userName, doctorName, slotDate, slot
             </tr>
             <tr>
               <td style="padding:10px 0;color:#94a3b8;border-bottom:1px solid #f1f5f9">
-               <img src="${escapeHtml(process.env.CAL_ICON)}" style="width:14px;height:14px;vertical-align:middle;margin-right:4px" /> Date
+               <img src="${safeUrl(process.env.CAL_ICON)}" style="width:14px;height:14px;vertical-align:middle;margin-right:4px" /> Date
               </td>
               <td style="padding:10px 0;font-weight:600;border-bottom:1px solid #f1f5f9">${escapeHtml(slotDate)}</td>
             </tr>
             <tr>
               <td style="padding:10px 0;color:#94a3b8;border-bottom:1px solid #f1f5f9">
-               <img src="${escapeHtml(process.env.CLOCK_ICON)}" style="width:14px;height:14px;vertical-align:middle;margin-right:4px" /> Time
+               <img src="${safeUrl(process.env.CLOCK_ICON)}" style="width:14px;height:14px;vertical-align:middle;margin-right:4px" /> Time
               </td>
               <td style="padding:10px 0;font-weight:600;border-bottom:1px solid #f1f5f9">${escapeHtml(slotTime)}</td>
             </tr>
             <tr>
               <td style="padding:10px 0;color:#94a3b8">
-               <img src="${escapeHtml(process.env.MONEY_ICON)}" style="width:14px;height:14px;vertical-align:middle;margin-right:4px" /> Fees
+               <img src="${safeUrl(process.env.MONEY_ICON)}" style="width:14px;height:14px;vertical-align:middle;margin-right:4px" /> Fees
               </td>
               <td style="padding:10px 0;font-weight:700;color:#4F46E5">${escapeHtml(currency)}${escapeHtml(fees)}</td>
             </tr>
@@ -91,19 +92,19 @@ export const appointmentCancelledTemplate = ({ userName, doctorName, slotDate, s
           <table style="width:100%;font-size:14px;color:#334155;border-collapse:collapse">
             <tr>
               <td style="padding:10px 0;color:#94a3b8;border-bottom:1px solid #f1f5f9">
-              <img src="${escapeHtml(process.env.DOC_ICON)}" style="width:14px;height:14px;vertical-align:middle;margin-right:4px" /> Doctor
+              <img src="${safeUrl(process.env.DOC_ICON)}" style="width:14px;height:14px;vertical-align:middle;margin-right:4px" /> Doctor
               </td>
               <td style="padding:10px 0;font-weight:600;border-bottom:1px solid #fee2e2">${escapeHtml(doctorName)}</td>
             </tr>
             <tr>
               <td style="padding:10px 0;color:#94a3b8;border-bottom:1px solid #f1f5f9">
-              <img src="${escapeHtml(process.env.CAL_ICON)}" style="width:14px;height:14px;vertical-align:middle;margin-right:4px" /> Date
+              <img src="${safeUrl(process.env.CAL_ICON)}" style="width:14px;height:14px;vertical-align:middle;margin-right:4px" /> Date
               </td>
               <td style="padding:10px 0;font-weight:600;border-bottom:1px solid #fee2e2">${escapeHtml(slotDate)}</td>
             </tr>
             <tr>
               <td style="padding:10px 0;color:#94a3b8;border-bottom:1px solid #f1f5f9">
-              <img src="${escapeHtml(process.env.CLOCK_ICON)}" style="width:14px;height:14px;vertical-align:middle;margin-right:4px" /> Time
+              <img src="${safeUrl(process.env.CLOCK_ICON)}" style="width:14px;height:14px;vertical-align:middle;margin-right:4px" /> Time
               </td>
               <td style="padding:10px 0;font-weight:600">${escapeHtml(slotTime)}</td>
             </tr>
@@ -141,19 +142,19 @@ export const paymentSuccessTemplate = ({ userName, doctorName, slotDate, slotTim
             </tr>
             <tr>
               <td style="padding:10px 0;color:#94a3b8;border-bottom:1px solid #f1f5f9">
-             <img src="${escapeHtml(process.env.CAL_ICON)}" style="width:14px;height:14px;vertical-align:middle;margin-right:4px" /> Date
+             <img src="${safeUrl(process.env.CAL_ICON)}" style="width:14px;height:14px;vertical-align:middle;margin-right:4px" /> Date
              </td>
               <td style="padding:10px 0;font-weight:600;border-bottom:1px solid #dcfce7">${escapeHtml(slotDate)}</td>
             </tr>
             <tr>
              <td style="padding:10px 0;color:#94a3b8;border-bottom:1px solid #f1f5f9">
-             <img src="${escapeHtml(process.env.CLOCK_ICON)}" style="width:14px;height:14px;vertical-align:middle;margin-right:4px" /> Time
+             <img src="${safeUrl(process.env.CLOCK_ICON)}" style="width:14px;height:14px;vertical-align:middle;margin-right:4px" /> Time
               </td>
               <td style="padding:10px 0;font-weight:600;border-bottom:1px solid #dcfce7">${escapeHtml(slotTime)}</td>
             </tr>
             <tr>
              <td style="padding:10px 0;color:#94a3b8">
-             <img src="${escapeHtml(process.env.MONEY_ICON)}" style="width:14px;height:14px;vertical-align:middle;margin-right:4px" /> Fees
+             <img src="${safeUrl(process.env.MONEY_ICON)}" style="width:14px;height:14px;vertical-align:middle;margin-right:4px" /> Fees
               </td>
               <td style="padding:10px 0;font-weight:700;color:#16a34a;border-bottom:1px solid #dcfce7">${escapeHtml(currency)}${escapeHtml(amount)}</td>
             </tr>

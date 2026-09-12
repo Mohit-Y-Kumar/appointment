@@ -5,6 +5,7 @@ import messageModel from '../models/messageModel.js'
 import callModel from '../models/callModel.js'
 import mongoose from 'mongoose'
 import { sendMail } from '../config/mailer.js'
+import { logError } from '../config/logger.js'
 import { appointmentBookedTemplate, appointmentCancelledTemplate } from '../config/emailTemplates.js'
 import { isValidAppointmentDate, isValidSlotTime } from '../utils/validation.js'
 
@@ -53,7 +54,9 @@ export const bookAppointment = async (req, res) => {
 
 		const user = await userModel.findById(req.userId).select('name email')
 		const { subject, html } = appointmentBookedTemplate({ userName: user.name, doctorName: docData.name, slotDate: slotDate.replace(/_/g, '/'), slotTime, fees: docData.fees })
-		sendMail({ to: user.email, subject, html })
+		sendMail({ to: user.email, subject, html }).catch(err => {
+			logError(err, { action: 'sendAppointmentBookedEmail', appointmentId: newAppointment._id })
+		})
 		return res.status(201).json({ success: true, message: 'Appointment booked.', appointmentId: newAppointment._id })
 	} catch (error) {
 		console.error('[bookAppointment]', error.message)
@@ -125,7 +128,10 @@ export const cancelAppointment = async (req, res) => {
 
 		const user = await userModel.findById(req.userId).select('name email')
 		const { subject, html } = appointmentCancelledTemplate({ userName: user.name, doctorName: cancelledAppointment.docData.name, slotDate: cancelledAppointment.slotDate.replace(/_/g, '/'), slotTime: cancelledAppointment.slotTime })
-		sendMail({ to: user.email, subject, html })
+		sendMail({ to: user.email, subject, html }).catch(err => {
+			logError(err, { action: 'sendAppointmentCancelledEmail', appointmentId: cancelledAppointment._id })
+		})
+		
 		return res.json({ success: true, message: 'Appointment cancelled successfully.' })
 	} catch (error) {
 		console.error('[cancelAppointment]', error.message)

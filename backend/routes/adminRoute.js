@@ -1,7 +1,7 @@
 import express from 'express'
 import { adminDashboard } from '../controller/adminDashboardController.js'
 import { appointmentsAdmin, appointmentCancel } from '../controller/adminAppointmentController.js'
-import { addDoctor, allDoctors, changeAvailability, verifyDoctorToken } from '../controller/adminDoctorController.js'
+import { addDoctor, allDoctors, changeAvailability, verifyDoctorToken, resendDoctorVerification } from '../controller/adminDoctorController.js'
 import { loginAdmin } from '../controller/adminAuthController.js'
 import { processRefund, getPendingRefunds } from '../controller/refundController.js'
 import upload from '../middleware/multer.js'
@@ -13,6 +13,7 @@ const adminRouter = express.Router()
 
 adminRouter.post('/add-doctor',          authAdmin, upload.single('image'), addDoctor)
 adminRouter.post('/verify-doctor-token', authAdmin, verifyDoctorToken)
+adminRouter.post('/resend-doctor-verification', authAdmin, resendDoctorVerification)
 adminRouter.post('/login',               authLimiter, loginAdmin)
 adminRouter.post('/refresh',             refreshLimiter, refreshForRole('admin'))
 adminRouter.post('/logout',              logoutForRole('admin'))

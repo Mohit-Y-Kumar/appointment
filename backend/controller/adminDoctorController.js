@@ -21,30 +21,30 @@ export const addDoctor = async (req, res) => {
 
 		let parsedAddress
 		try { parsedAddress = JSON.parse(address) } catch { return res.status(400).json({ success: false, message: 'Invalid address format.' }) }
-		
+
 		// Validate address structure and content
 		if (!isValidAddress(parsedAddress)) {
 			return res.status(400).json({ success: false, message: 'Invalid address. Please provide valid line1, city, state, and pincode (5-6 digits).' })
 		}
-		
+
 		const hashPassword = await bcrypt.hash(password, await bcrypt.genSalt(10))
 		const imageUpload = await cloudinary.uploader.upload(req.file.path, { resource_type: 'image' })
-		
+
 		// Generate verification token (valid for 24 hours)
 		const verificationToken = crypto.randomBytes(32).toString('hex')
 		const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000)
-		
-		const doctor = await new doctorModel({ 
-			name, 
-			email, 
-			image: imageUpload.secure_url, 
-			password: hashPassword, 
-			speciality, 
-			degree, 
-			experience, 
-			about, 
-			fees: Number(fees), 
-			address: parsedAddress, 
+
+		const doctor = await new doctorModel({
+			name,
+			email,
+			image: imageUpload.secure_url,
+			password: hashPassword,
+			speciality,
+			degree,
+			experience,
+			about,
+			fees: Number(fees),
+			address: parsedAddress,
 			date: Date.now(),
 			emailVerified: false,
 			verificationToken,
@@ -52,87 +52,99 @@ export const addDoctor = async (req, res) => {
 		}).save()
 
 		// Send verification email
-		await sendMail({
-			to: email,
-			subject: 'DocNest Account Verification - Please Share Token with Admin',
-			html: `
-				<h2>Email Verification</h2>
-				<p>Hi Dr. ${name},</p>
-				<p>Your DocNest doctor account has been created by an administrator. Please verify your email address to activate your account.</p>
-				<p><strong>Your Verification Token:</strong></p>
-				<p style="font-size: 18px; font-family: monospace; background-color: #f0f0f0; padding: 10px; border-radius: 5px;">
-					${verificationToken}
-				</p>
-				<p><strong>Instructions:</strong></p>
-				<ol>
-					<li>Copy the verification token above</li>
-					<li>Share this token with the administrator who added you</li>
-					<li>The administrator will verify your email in the doctor form</li>
-					<li>You'll then be able to login to your account</li>
-				</ol>
-				<p>This token will expire in 24 hours.</p>
-				<p>Best regards,<br/>DocNest Team</p>
-			`
-		})
+
 
 		logAuthEvent('doctor_added', doctor._id, 'admin', { email })
-		return res.status(201).json({ 
-			success: true, 
-			message: 'Doctor added successfully. Verification email sent. Waiting for token verification.',
+		let emailSent = true
+		try {
+			await sendMail({
+				to: email,
+				subject: 'DocNest Account Verification - Please Share Token with Admin',
+				html: `
+					<h2>Email Verification</h2>
+					<p>Hi Dr. ${name},</p>
+					<p>Your DocNest doctor account has been created by an administrator. Please verify your email address to activate your account.</p>
+					<p><strong>Your Verification Token:</strong></p>
+					<p style="font-size: 18px; font-family: monospace; background-color: #f0f0f0; padding: 10px; border-radius: 5px;">
+						${verificationToken}
+					</p>
+					<p><strong>Instructions:</strong></p>
+					<ol>
+						<li>Copy the verification token above</li>
+						<li>Share this token with the administrator who added you</li>
+						<li>The administrator will verify your email in the doctor form</li>
+						<li>You'll then be able to login to your account</li>
+					</ol>
+					<p>This token will expire in 24 hours.</p>
+					<p>Best regards,<br/>DocNest Team</p>
+				`
+			})
+		} catch (mailError) {
+			emailSent = false
+			logError(mailError, { action: 'addDoctor_sendVerificationEmail', doctorId: doctor._id })
+		}
+
+		return res.status(201).json({
+			success: true,
+			message: emailSent
+				? 'Doctor added successfully. Verification email sent. Waiting for token verification.'
+				: 'Doctor added successfully, but the verification email could not be sent. Please resend it.',
 			doctorId: doctor._id,
-			doctorEmail: email
+			doctorEmail: email,
+			emailSent
 		})
 	} catch (error) {
 		console.error('[addDoctor]', error.message)
 		logError(error, { action: 'addDoctor' })
 		return res.status(500).json({ success: false, message: 'Internal server error.' })
 	} finally {
-		if (req.file?.path) await unlink(req.file.path).catch(() => {})
+		if (req.file?.path) await unlink(req.file.path).catch(() => { })
 	}
 }
+
 
 export const verifyDoctorToken = async (req, res) => {
 	try {
 		const { doctorId, verificationToken } = req.body
 
 		if (!doctorId || !verificationToken) {
-			return res.status(400).json({ 
-				success: false, 
-				message: 'Doctor ID and verification token are required.' 
+			return res.status(400).json({
+				success: false,
+				message: 'Doctor ID and verification token are required.'
 			})
 		}
 
 		const doctor = await doctorModel.findById(doctorId)
 		if (!doctor) {
 			logAuthEvent('verify_token_failed_not_found', null, 'admin', { doctorId })
-			return res.status(404).json({ 
-				success: false, 
-				message: 'Doctor not found.' 
+			return res.status(404).json({
+				success: false,
+				message: 'Doctor not found.'
 			})
 		}
 
 		// Check if already verified
 		if (doctor.emailVerified) {
-			return res.status(400).json({ 
-				success: false, 
-				message: 'Doctor email is already verified.' 
+			return res.status(400).json({
+				success: false,
+				message: 'Doctor email is already verified.'
 			})
 		}
 
 		// Check if token is valid and not expired
 		if (!doctor.verificationToken || doctor.verificationToken !== verificationToken) {
 			logAuthEvent('verify_token_failed_invalid', doctor._id, 'admin', { doctorId })
-			return res.status(401).json({ 
-				success: false, 
-				message: 'Invalid verification token.' 
+			return res.status(401).json({
+				success: false,
+				message: 'Invalid verification token.'
 			})
 		}
 
 		if (doctor.verificationTokenExpiry < new Date()) {
 			logAuthEvent('verify_token_failed_expired', doctor._id, 'admin', { doctorId })
-			return res.status(401).json({ 
-				success: false, 
-				message: 'Verification token has expired. Please resend verification email.' 
+			return res.status(401).json({
+				success: false,
+				message: 'Verification token has expired. Please resend verification email.'
 			})
 		}
 
@@ -143,13 +155,57 @@ export const verifyDoctorToken = async (req, res) => {
 		await doctor.save()
 
 		logAuthEvent('doctor_email_verified', doctor._id, 'admin', { doctorId })
-		return res.json({ 
-			success: true, 
-			message: 'Doctor email verified successfully. Doctor can now login.' 
+		return res.json({
+			success: true,
+			message: 'Doctor email verified successfully. Doctor can now login.'
 		})
 	} catch (error) {
 		console.error('[verifyDoctorToken]', error.message)
 		logError(error, { action: 'verifyDoctorToken' })
+		return res.status(500).json({ success: false, message: 'Internal server error.' })
+	}
+}
+
+export const resendDoctorVerification = async (req, res) => {
+	try {
+		const { doctorId } = req.body
+		if (!doctorId) return res.status(400).json({ success: false, message: 'Doctor ID is required.' })
+
+		const doctor = await doctorModel.findById(doctorId)
+		if (!doctor) return res.status(404).json({ success: false, message: 'Doctor not found.' })
+		if (doctor.emailVerified) return res.status(400).json({ success: false, message: 'Doctor email is already verified.' })
+
+		const verificationToken = crypto.randomBytes(32).toString('hex')
+		const tokenExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000)
+		doctor.verificationToken = verificationToken
+		doctor.verificationTokenExpiry = tokenExpiry
+		await doctor.save()
+
+		try {
+			await sendMail({
+				to: doctor.email,
+				subject: 'DocNest Account Verification (Resent) - Please Share Token with Admin',
+				html: `
+					<h2>Email Verification</h2>
+					<p>Hi Dr. ${doctor.name},</p>
+					<p>Here is a new verification token for your DocNest account.</p>
+					<p style="font-size: 18px; font-family: monospace; background-color: #f0f0f0; padding: 10px; border-radius: 5px;">
+						${verificationToken}
+					</p>
+					<p>This token will expire in 24 hours.</p>
+					<p>Best regards,<br/>DocNest Team</p>
+				`
+			})
+		} catch (mailError) {
+			logError(mailError, { action: 'resendDoctorVerification_sendEmail', doctorId: doctor._id })
+			return res.status(502).json({ success: false, message: 'Token regenerated but the email could not be sent. Try again shortly.' })
+		}
+
+		logAuthEvent('doctor_verification_resent', doctor._id, 'admin', { doctorId })
+		return res.json({ success: true, message: 'Verification email resent.' })
+	} catch (error) {
+		console.error('[resendDoctorVerification]', error.message)
+		logError(error, { action: 'resendDoctorVerification' })
 		return res.status(500).json({ success: false, message: 'Internal server error.' })
 	}
 }
@@ -190,11 +246,11 @@ export const allDoctors = async (req, res) => {
 	}
 }
 export {
-    changeAvailability,
-    changeAvailablity,
-    doctorList,
-    doctorProfile,
-    updateDoctorProfile,
-    incrementView,
-    toggleLike
+	changeAvailability,
+	changeAvailablity,
+	doctorList,
+	doctorProfile,
+	updateDoctorProfile,
+	incrementView,
+	toggleLike
 } from './doctorProfileController.js'

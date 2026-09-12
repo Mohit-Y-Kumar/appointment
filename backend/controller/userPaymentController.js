@@ -6,6 +6,7 @@ import paymentModel from '../models/paymentModel.js'
 import userModel from '../models/userModel.js'
 import webhookEventModel from '../models/webhookEventModel.js'
 import { sendMail } from '../config/mailer.js'
+import { logError } from '../config/logger.js'
 import { paymentSuccessTemplate } from '../config/emailTemplates.js'
 
 const getRazorpayInstance = () => {
@@ -138,7 +139,10 @@ export const verifyRazorpay = async (req, res) => {
 
         const user = await userModel.findById(appointment.userId).select('name email')
         const { subject, html } = paymentSuccessTemplate({ userName: user.name, doctorName: appointment.docData.name, slotDate: appointment.slotDate.replace(/_/g, '/'), slotTime: appointment.slotTime, amount: appointment.amount, paymentId: razorpay_payment_id })
-        sendMail({ to: user.email, subject, html })
+        sendMail({ to: user.email, subject, html }).catch(err => {
+            logError(err, { action: 'sendPaymentSuccessEmail_verify', appointmentId: appointment._id })
+        })
+
         return res.json({ success: true, message: 'Payment successful.' })
     } catch (error) {
         console.error('[verifyRazorpay]', error.message)
@@ -148,12 +152,12 @@ export const verifyRazorpay = async (req, res) => {
 
 export const handleRazorpayWebhook = async (req, res) => {
     const webhookId = req.headers['x-razorpay-event-id']
-    
+
     try {
         const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET
         const signature = req.headers['x-razorpay-signature']
         if (!webhookSecret || typeof signature !== 'string' || !req.rawBody) return res.status(400).json({ success: false, message: 'Invalid webhook request.' })
-        
+
         // Verify webhook signature
         const expected = crypto.createHmac('sha256', webhookSecret).update(req.rawBody).digest('hex')
         const expectedBuffer = Buffer.from(expected, 'utf8')
@@ -191,7 +195,7 @@ export const handleRazorpayWebhook = async (req, res) => {
                     status: 'completed',
                     processedAt: new Date(),
                     rawPayload: event
-                }).catch(() => {}) // Ignore duplicate key errors
+                }).catch(() => { }) // Ignore duplicate key errors
             }
             return res.json({ success: true })
         }
@@ -199,13 +203,18 @@ export const handleRazorpayWebhook = async (req, res) => {
         if (paymentEntity.status !== 'captured' || Number(paymentEntity.amount) !== Number(payment.amount) * 100) return res.status(400).json({ success: false, message: 'Webhook payment mismatch.' })
 
         const session = await mongoose.startSession()
+        let emailAppointment = null;
         try {
             await session.withTransaction(async () => {
                 const claimedPayment = await paymentModel.findOneAndUpdate({ _id: payment._id, status: 'created' }, { status: 'paid', razorpay_payment_id: paymentId, razorpay_signature: signature }, { new: true, session })
                 if (!claimedPayment) return
                 const appointment = await appointmentModel.findOneAndUpdate({ _id: payment.appointmentId, userId: payment.userId, cancelled: false, payment: false }, { payment: true }, { new: true, session })
                 if (!appointment && !await appointmentModel.exists({ _id: payment.appointmentId, payment: true }).session(session)) { const error = new Error('Appointment is no longer available for payment.'); error.status = 409; throw error }
-                
+
+                // FIX: only set this when we (not a prior, already-completed request)
+                // are the one making the payment→paid transition.
+                if (appointment) emailAppointment = appointment
+
                 // Log successful webhook processing
                 if (webhookId) {
                     await webhookEventModel.create({
@@ -216,7 +225,7 @@ export const handleRazorpayWebhook = async (req, res) => {
                         status: 'completed',
                         processedAt: new Date(),
                         rawPayload: event
-                    }, { session }).catch(() => {}) // Ignore errors from webhook tracking
+                    }, { session }).catch(() => { }) // Ignore errors from webhook tracking
                 }
             })
         } catch (error) {
@@ -229,17 +238,34 @@ export const handleRazorpayWebhook = async (req, res) => {
                         error: error.message
                     },
                     { upsert: true }
-                ).catch(() => {})
+                ).catch(() => { })
             }
             if (error.status) return res.status(error.status).json({ success: false, message: error.message })
             throw error
         } finally {
             await session.endSession()
         }
+        if (emailAppointment) {
+            const user = await userModel.findById(emailAppointment.userId).select('name email')
+            if (user) {
+                const { subject, html } = paymentSuccessTemplate({
+                    userName: user.name,
+                    doctorName: emailAppointment.docData.name,
+                    slotDate: emailAppointment.slotDate.replace(/_/g, '/'),
+                    slotTime: emailAppointment.slotTime,
+                    amount: emailAppointment.amount,
+                    paymentId
+                })
+                sendMail({ to: user.email, subject, html }).catch(err => {
+                    logError(err, { action: 'sendPaymentSuccessEmail_webhook', appointmentId: emailAppointment._id })
+                })
+            }
+        }
+
         return res.json({ success: true })
     } catch (error) {
         console.error('[paymentWebhook]', error.message)
-        
+
         // Log error in webhook event tracking
         if (webhookId) {
             await webhookEventModel.findOneAndUpdate(
@@ -249,9 +275,9 @@ export const handleRazorpayWebhook = async (req, res) => {
                     error: error.message
                 },
                 { upsert: true }
-            ).catch(() => {})
+            ).catch(() => { })
         }
-        
+
         return res.status(400).json({ success: false, message: 'Invalid webhook payload.' })
     }
 }
