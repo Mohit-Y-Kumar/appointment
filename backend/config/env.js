@@ -26,10 +26,8 @@ const optionalEnv = [
     'CLOUDINARY_API_KEY',
     'CLOUDINARY_API_SECRET',
     'MONGO_TRANSACTIONS_REQUIRED',
-    'GOOGLE_CLIENT_ID',
-    'GOOGLE_CLIENT_SECRET',
-    'GOOGLE_REFRESH_TOKEN',
-    'GOOGLE_USER'
+    'EMAIL_USER',
+    'EMAIL_PASS'
 ]
 
 export const validateEnv = (customRequired = [], customOptional = []) => {
@@ -54,15 +52,10 @@ export const validateEnv = (customRequired = [], customOptional = []) => {
         }
     }
 
-    const hasOAuthConfig = Boolean(
-        process.env.GOOGLE_CLIENT_ID &&
-        process.env.GOOGLE_CLIENT_SECRET &&
-        process.env.GOOGLE_REFRESH_TOKEN &&
-        process.env.GOOGLE_USER
-    )
+    const hasSmtpConfig = Boolean(process.env.EMAIL_USER && process.env.EMAIL_PASS)
 
-    if (!hasOAuthConfig) {
-        missing.push('GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REFRESH_TOKEN, and GOOGLE_USER')
+    if (!hasSmtpConfig) {
+        missing.push('EMAIL_USER/EMAIL_PASS')
     }
 
     if (process.env.NODE_ENV === 'production') {

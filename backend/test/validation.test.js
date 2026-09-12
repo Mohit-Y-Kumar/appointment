@@ -3,7 +3,7 @@ import assert from 'node:assert/strict'
 import { validateEnv } from '../config/env.js'
 import { isValidAppointmentDate, isValidFee, isValidSlotTime, parseAppointmentDateTime } from '../utils/validation.js'
 
-test('rejects SMTP-only email credentials without Gmail OAuth config', () => {
+test('accepts Gmail SMTP credentials without OAuth config', () => {
     const previousEnv = { ...process.env }
 
     try {
@@ -23,13 +23,13 @@ test('rejects SMTP-only email credentials without Gmail OAuth config', () => {
         delete process.env.GOOGLE_REFRESH_TOKEN
         delete process.env.GOOGLE_USER
 
-        assert.throws(() => validateEnv(), /GOOGLE_CLIENT_ID|GOOGLE_REFRESH_TOKEN|GOOGLE_USER/i)
+        assert.doesNotThrow(() => validateEnv())
     } finally {
         process.env = previousEnv
     }
 })
 
-test('accepts Gmail OAuth credentials without SMTP email/password', () => {
+test('rejects missing SMTP credentials even if OAuth variables are present', () => {
     const previousEnv = { ...process.env }
 
     try {
@@ -49,7 +49,7 @@ test('accepts Gmail OAuth credentials without SMTP email/password', () => {
         delete process.env.EMAIL_USER
         delete process.env.EMAIL_PASS
 
-        assert.doesNotThrow(() => validateEnv())
+        assert.throws(() => validateEnv(), /EMAIL_USER\/EMAIL_PASS/i)
     } finally {
         process.env = previousEnv
     }

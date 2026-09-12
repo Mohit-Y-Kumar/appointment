@@ -1,12 +1,7 @@
 import nodemailer from 'nodemailer'
 
-const gmailUser = process.env.GOOGLE_USER || process.env.EMAIL_USER
-const hasOAuthCredentials = Boolean(
-    process.env.GOOGLE_CLIENT_ID &&
-    process.env.GOOGLE_CLIENT_SECRET &&
-    process.env.GOOGLE_REFRESH_TOKEN &&
-    gmailUser
-)
+const gmailUser = process.env.EMAIL_USER
+const hasSmtpCredentials = Boolean(process.env.EMAIL_USER && process.env.EMAIL_PASS)
 
 const baseTimeouts = {
     pool: true,
@@ -16,21 +11,20 @@ const baseTimeouts = {
     socketTimeout: 20000
 }
 
-const gmailOAuthConfig = {
-    type: 'OAuth2',
-    user: gmailUser,
-    clientId: process.env.GOOGLE_CLIENT_ID,
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-    refreshToken: process.env.GOOGLE_REFRESH_TOKEN
-}
-
-const oauthTransport = hasOAuthCredentials
-    ? nodemailer.createTransport({ service: 'gmail', auth: gmailOAuthConfig, ...baseTimeouts })
+const smtpTransport = hasSmtpCredentials
+    ? nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS
+        },
+        ...baseTimeouts
+    })
     : null
 
 export const sendMail = async ({ to, subject, html }) => {
-    if (!oauthTransport) {
-        console.error('[Mailer] Gmail OAuth credentials are missing. Set GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET, GOOGLE_REFRESH_TOKEN, and GOOGLE_USER.')
+    if (!smtpTransport) {
+        console.error('[Mailer] Gmail SMTP credentials are missing. Set EMAIL_USER and EMAIL_PASS.')
         return false
     }
 
@@ -42,17 +36,14 @@ export const sendMail = async ({ to, subject, html }) => {
     }
 
     try {
-        await oauthTransport.verify()
-        await oauthTransport.sendMail(mailOptions)
-        console.log(`[Mailer] Email sent via OAuth to ${to}`)
+        await smtpTransport.verify()
+        await smtpTransport.sendMail(mailOptions)
+        console.log(`[Mailer] Email sent via SMTP to ${to}`)
         return true
     } catch (error) {
-        console.error('[Mailer] Gmail OAuth send failed:', error.message)
-        if (error.code === 'EAUTH' || /invalid_grant|oauth|authentication/i.test(error.message)) {
-            console.error('[Mailer] Gmail OAuth credentials appear invalid or expired. Generate a fresh Google refresh token for the same Gmail account.')
-        }
+        console.error('[Mailer] Gmail SMTP send failed:', error.message)
         return false
     }
 }
 
-export default oauthTransport || null
+export default smtpTransport || null
